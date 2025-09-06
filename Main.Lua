@@ -1,3 +1,7 @@
+-- Load PurchaseWeather module safely
+local weather = game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/PurchaseWeather.lua")
+local PurchaseWeather = loadstring(weather)()
+
 --========================
 -- UI Creation
 --========================
@@ -23,8 +27,7 @@ local WeatherTab = Window:AddTab({
 --======================
 -- Load PurchaseWeather module
 --======================
-local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/PurchaseWeather.lua"))()
-
+local PurchaseWeather = loadstring(weather)()
 --======================
 -- Add Buttons for Weather
 --======================
