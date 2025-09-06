@@ -8,7 +8,7 @@ local PurchaseWeather = loadstring(weather)()
 local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local Window = UI:CreateWindow({
-    Title = "IkanTerbang Hub",
+    Title = "IkanTerbang Hub", 
     SubTitle = "",
     TabWidth = 140,     
     Size = UDim2.fromOffset(580, 400),
