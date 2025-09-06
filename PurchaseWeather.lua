@@ -17,6 +17,6 @@ function PurchaseWeather.BuyStorm()
         end)
         print("Purchased 'Storm' weather successfully! Tier: 3, Price 35000")
     end
-end
+end 
 
 return PurchaseWeather
