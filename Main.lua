@@ -5,11 +5,11 @@
 local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 print("Loaded UI:", UI)
 
-    Fluent:Notify({
-        Title = "Notification",
-        Content = "The Script is loading....",
-        Duration = 5 -- Set to nil to make the notification not disappear
-    })
+Fluent:Notify({
+Title = "Notification",
+Content = "The Script is loading....",
+Duration = 5 -- Set to nil to make the notification not disappear
+})
 
 --========================
 --  Preload Functions
