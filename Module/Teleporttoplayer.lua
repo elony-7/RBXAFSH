@@ -6,10 +6,14 @@ local LocalPlayer = Players.LocalPlayer
 -- Selected player
 TeleportToPlayer.selectedPlayerName = "None"
 
+-- Map display names to real names
+local displayToName = {}
+
 -- Function to teleport to a player
-function TeleportToPlayer.TeleportTo(name)
-    if name == "None" then
-        warn("❌ No player selected")
+function TeleportToPlayer.TeleportTo(displayName)
+    local name = displayToName[displayName]
+    if not name then
+        warn("❌ No player selected or invalid player")
         return
     end
 
@@ -28,12 +32,14 @@ function TeleportToPlayer.TeleportTo(name)
     end
 end
 
--- Function to get initial player names excluding yourself
+-- Function to get initial player DisplayNames
 function TeleportToPlayer.GetInitialPlayers()
     local names = {}
+    displayToName = {} -- reset mapping
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
-            table.insert(names, plr.Name)
+            table.insert(names, plr.DisplayName)
+            displayToName[plr.DisplayName] = plr.Name
         end
     end
     return names
