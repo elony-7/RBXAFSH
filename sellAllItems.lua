@@ -1,4 +1,9 @@
-local autosellmodule = {}
+local autosellmodule = {
+    autoSellEnabled = false,
+    sellDelayMinutes = 1,
+    _loopRunning = false,
+}
+
 
 function autosellmodule.sellAllItems()
     local ReplicatedStorage = game:GetService("ReplicatedStorage")

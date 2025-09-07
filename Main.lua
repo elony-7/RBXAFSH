@@ -9,6 +9,7 @@ print("Has BuyStorm:", PurchaseWeather and PurchaseWeather.BuyStorm)
 local autosellmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/sellAllItems.lua"))()  -- remove the internal HttpGet for PurchaseWeather
 print("Loaded AutoSellModule:", autosellmodule)
 print("Has sellAllItems:", autosellmodule and autosellmodule.sellAllItems)
+
 --========================
 -- UI Creation
 --========================
@@ -58,6 +59,7 @@ local autoSellTab = Window:AddTab({
     Icon = "shopping-cart" 
 })
 
+
 local WeatherTab = Window:AddTab({ 
     Title = "Weather", 
     Icon = "cloud-rain" 
@@ -76,6 +78,38 @@ autoSellTab:AddButton({
         autosellmodule.sellAllItems()
     end
 })
+
+autoSellTab:AddToggle("AutoSellToggle", {
+    Title = "💰 Auto Sell",
+    Description = "Automatically sells all items at the specified interval.",
+    Default = false
+}):OnChanged(function(val)
+    autosellmodule.autoSellEnabled = val
+    if val then
+        print("✅ Auto Sell ENABLED")
+        task.spawn(function()
+            while autosellmodule.autoSellEnabled do
+                autosellmodule.sellAllItems()
+                task.wait(autosellmodule.sellDelayMinutes * 60)  -- convert minutes to seconds
+            end
+        end)
+    else
+        print("❌ Auto Sell DISABLED")
+    end
+end)
+
+-- Slider to adjust delay in minutes
+autoSellTab:AddSlider("SellDelaySlider", {
+    Title = "⏱ Sell Delay (Minutes)",
+    Description = "Set how often items are sold automatically.",
+    Default = 1,
+    Min = 0.5,
+    Max = 30,
+    Rounding = 1
+}):OnChanged(function(val)
+    autosellmodule.sellDelayMinutes = val
+    print("🔧 Auto Sell delay set to " .. autosellmodule.sellDelayMinutes .. " minute(s)")
+end)
 
 WeatherTab:AddButton({
     Title = "Buy Storm Weather",
