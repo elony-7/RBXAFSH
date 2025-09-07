@@ -10,6 +10,3 @@ local UI = loadstring(UIcode)()
 -- Now call Main.lua
 local mainCode = game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Main.lua")
 loadstring(mainCode)()  -- remove the internal HttpGet for PurchaseWeather
-
-local weatherCode = game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/PurchaseWeather.lua")
-local PurchaseWeather = loadstring(weatherCode)()
