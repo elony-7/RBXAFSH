@@ -95,6 +95,11 @@ local TeleportTab = Window:AddTab({
 })
 print("Created Teleport Tab:", TeleportTab)
 
+local TeleportPlayerTab = Window:AddTab({ 
+    Title = "Teleport to Player", 
+    Icon = "user" 
+})
+
 local autoSellTab = Window:AddTab({ 
     Title = "Auto Sell", 
     Icon = "shopping-cart" 
