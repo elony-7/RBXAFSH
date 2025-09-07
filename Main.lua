@@ -151,11 +151,6 @@ end
 --======================
 -- Get initial player list (exclude yourself)
 local playerList = TeleportToPlayer.GetInitialPlayers()
-fluent:Notify({
-    Title = "Player List Loaded",
-    Content = "Found " .. tostring(#playerList) .. " players.",
-    Duration = 3 -- Set to nil to make the notification not disappear
-})
 -- Set initial selection
 local selectedPlayer = playerList[1] or "None"
 TeleportToPlayer.selectedPlayerName = selectedPlayer
