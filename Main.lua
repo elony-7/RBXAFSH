@@ -1,8 +1,8 @@
 --========================
--- UI Creation
+-- Preload Fluent UI Library
 --========================
--- Preload UI
-local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 print("Loaded UI:", UI)
 
 Fluent:Notify({
@@ -77,7 +77,7 @@ print("Loaded AntiAFKModule:", antiafkmodule)
 --======================
 
 
-local Window = UI:CreateWindow({
+local Window = Fluent:CreateWindow({
     Title = "IkanTerbang Hub",
     SubTitle = "",
     TabWidth = 140,
