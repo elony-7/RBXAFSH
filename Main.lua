@@ -152,10 +152,10 @@ ExtraTab:AddToggle("AntiAFKToggle", {
 }):OnChanged(function(val)
     if val then
         antiafkmodule.start()
-        addLog("🛡️ Anti-AFK ENABLED")
+        print("🛡️ Anti-AFK ENABLED")
     else
         antiafkmodule.stop()
-        addLog("🛡️ Anti-AFK DISABLED")
+        print("🛡️ Anti-AFK DISABLED")
     end
 end)
 
