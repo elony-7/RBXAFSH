@@ -137,6 +137,11 @@ for name, pos in pairs(TeleportModule.Locations) do
         Description = "Teleport to " .. name,
         Callback = function()
             TeleportModule.TeleportTo(pos)  -- calls the function in the module
+            Fluent:Notify({
+                Title = "Teleported",
+                Content = "You have been teleported to " .. name,
+                Duration = 1 -- Set to nil to make the notification not disappear
+            })
         end
     })
 end
@@ -146,7 +151,11 @@ end
 --======================
 -- Get initial player list (exclude yourself)
 local playerList = TeleportToPlayer.GetInitialPlayers()
-
+fluent:Notify({
+    Title = "Player List Loaded",
+    Content = "Found " .. tostring(#playerList) .. " players.",
+    Duration = 3 -- Set to nil to make the notification not disappear
+})
 -- Set initial selection
 local selectedPlayer = playerList[1] or "None"
 TeleportToPlayer.selectedPlayerName = selectedPlayer
@@ -175,6 +184,11 @@ TeleportPlayerTab:AddButton({
     Description = "Teleport to the selected player",
     Callback = function()
         TeleportToPlayer.TeleportTo(selectedPlayer)
+        Fluent:Notify({
+            Title = "Teleport",
+            Content = "Teleported to " .. selectedPlayer,
+            Duration = 2 -- Set to nil to make the notification not disappear
+        })
     end
 })
 
@@ -183,9 +197,15 @@ TeleportPlayerTab:AddButton({
 --======================
 autoSellTab:AddButton({
     Title = "Sell All Items",
+    SubTitle = "Sell Anywhere",
     Callback = function()
         -- Call the function from the module
         autosellmodule.sellAllItems()
+        fluent:Notify({
+            Title = "Sell Anywhere",
+            Content = "All items sold!",
+            Duration = 2 -- Set to nil to make the notification not disappear
+        })
     end
 })
 
@@ -197,6 +217,11 @@ autoSellTab:AddToggle("AutoSellToggle", {
     autosellmodule.autoSellEnabled = val
     if val then
         print("✅ Auto Sell ENABLED")
+        fluent:Notify({
+            Title = "Auto Sell",
+            Content = "Auto Sell ENABLED",
+            Duration = 2 -- Set to nil to make the notification not disappear
+        })
         task.spawn(function()
             while autosellmodule.autoSellEnabled do
                 autosellmodule.sellAllItems()
@@ -205,6 +230,11 @@ autoSellTab:AddToggle("AutoSellToggle", {
         end)
     else
         print("❌ Auto Sell DISABLED")
+        fluent.Notify({
+            Title = "Auto Sell",
+            Content = "Auto Sell DISABLED",
+            Duration = 2 -- Set to nil to make the notification not disappear
+        })
     end
 end)
 
@@ -219,6 +249,11 @@ autoSellTab:AddSlider("SellDelaySlider", {
 }):OnChanged(function(val)
     autosellmodule.sellDelayMinutes = val
     print("🔧 Auto Sell delay set to " .. autosellmodule.sellDelayMinutes .. " minute(s)")
+    fluent.notify({
+        Title = "Auto Sell Delay",
+        Content = "Delay set to " .. val .. " minute(s)",
+        Duration = 2 -- Set to nil to make the notification not disappear
+    })
 end)
 
 --======================
@@ -230,6 +265,11 @@ WeatherTab:AddButton({
     Callback = function()
         -- Call the function from the module
         PurchaseWeather.BuyStorm()
+        fluent:Notify({
+            Title = "Weather Purchased",
+            Content = "Storm weather purchased!",
+            Duration = 2 -- Set to nil to make the notification not disappear
+        })
     end
 })
 
@@ -245,9 +285,19 @@ ExtraTab:AddToggle("AntiAFKToggle", {
     if val then
         antiafkmodule.start()
         print("🛡️ Anti-AFK ENABLED")
+        notify({
+            Title = "🛡️ Anti-AFK",
+            Content = "Anti-AFK ENABLED",
+            Duration = 2 -- Set to nil to make the notification not disappear
+        })
     else
         antiafkmodule.stop()
         print("🛡️ Anti-AFK DISABLED")
+        notify({
+            Title = "🛡️ Anti-AFK",
+            Content = "Anti-AFK DISABLED",
+            Duration = 2 -- Set to nil to make the notification not disappear
+        })
     end
 end)
 
