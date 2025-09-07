@@ -1,6 +1,6 @@
 -- Preload module
-local weatherCode = game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/PurchaseWeather.lua")
-local success, PurchaseWeather = pcall(function() return loadstring(weatherCode)() end)
+local weather = game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/PurchaseWeather.lua")
+local success, PurchaseWeather = pcall(function() return loadstring(weather)() end)
 if not success then warn("Failed to load PurchaseWeather:", PurchaseWeather) end
 
 -- Preload UI
