@@ -95,6 +95,7 @@ local TeleportTab = Window:AddTab({
 })
 print("Created Teleport Tab:", TeleportTab)
 
+-- Create Teleport to Player Tab
 local TeleportPlayerTab = Window:AddTab({ 
     Title = "Teleport to Player", 
     Icon = "user" 
@@ -121,60 +122,6 @@ print("Created Extra Tab:", ExtraTab)
 
 
 --======================
--- Teleport to Player Tab
---======================
--- Track dropdown state (global variable)
-TeleportToPlayer.dropdownOpen = false
-
--- Toggle button to show/hide player list
--- Assuming TeleportToPlayer module is already loaded
--- local TeleportToPlayer = loadstring(...)()
-
--- Create toggle button to show/hide player list
-local toggleButton = TeleportPlayerTab:AddButton({
-    Title = "Select Player: None",
-    Description = "Click to select player",
-    Callback = function()
-        TeleportToPlayer.dropdownOpen = not TeleportToPlayer.dropdownOpen
-
-        if TeleportToPlayer.dropdownOpen then
-            -- Show player buttons
-            TeleportToPlayer.refreshCallback = function()
-                TeleportToPlayer.CreatePlayerButtons(TeleportPlayerTab, function(displayName)
-                    -- Update the toggle button title
-                    toggleButton.Title = "Select Player: " .. displayName
-
-                    -- Hide dropdown after selecting
-                    for _, btn in ipairs(TeleportToPlayer.playerButtons) do
-                        btn:Destroy()
-                    end
-                    TeleportToPlayer.playerButtons = {}
-                    TeleportToPlayer.dropdownOpen = false
-                end)
-            end
-
-            TeleportToPlayer.refreshCallback()
-        else
-            -- Hide dropdown manually
-            for _, btn in ipairs(TeleportToPlayer.playerButtons) do
-                btn:Destroy()
-            end
-            TeleportToPlayer.playerButtons = {}
-        end
-    end
-})
-
--- Teleport Player button
-TeleportPlayerTab:AddButton({
-    Title = "Teleport to Player",
-    Description = "Teleport to the selected player",
-    Callback = function()
-        TeleportToPlayer.TeleportTo(TeleportToPlayer.selectedPlayerName)
-    end
-})
-
-
---======================
 -- Add Buttons for Teleport Tab
 --======================
 for name, pos in pairs(TeleportModule.Locations) do
@@ -187,6 +134,35 @@ for name, pos in pairs(TeleportModule.Locations) do
     })
 end
 
+
+-- Create a dropdown for player selection
+local playerDropdown = TeleportPlayerTab:AddDropdown({
+    Title = "Select Player",
+    Default = "None",
+    Options = TeleportToPlayer.GetPlayersNames(), -- initial player list
+    Callback = function(selectedName)
+        TeleportToPlayer.selectedPlayerName = selectedName
+        print("Selected player:", selectedName)
+    end
+})
+
+-- Create a button to teleport to the selected player
+TeleportPlayerTab:AddButton({
+    Title = "Teleport to Player",
+    Description = "Teleport to the selected player",
+    Callback = function()
+        TeleportToPlayer.TeleportTo(TeleportToPlayer.selectedPlayerName)
+    end
+})
+
+-- Auto-refresh dropdown when players join/leave
+local Players = game:GetService("Players")
+Players.PlayerAdded:Connect(function()
+    playerDropdown:SetOptions(TeleportToPlayer.GetPlayersNames())
+end)
+Players.PlayerRemoving:Connect(function()
+    playerDropdown:SetOptions(TeleportToPlayer.GetPlayersNames())
+end)
 --======================
 -- Add Buttons for auto sell Tab
 --======================

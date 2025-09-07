@@ -6,12 +6,6 @@ local LocalPlayer = Players.LocalPlayer
 -- Selected player
 TeleportToPlayer.selectedPlayerName = "None"
 
--- Store buttons for cleanup
-TeleportToPlayer.playerButtons = {}
-
--- Track dropdown state
-TeleportToPlayer.dropdownOpen = false
-
 -- Function to teleport to a player
 function TeleportToPlayer.TeleportTo(name)
     if name == "None" then
@@ -34,43 +28,15 @@ function TeleportToPlayer.TeleportTo(name)
     end
 end
 
--- Function to create player buttons
--- callbackUpdateSelected is called when a player is selected
-function TeleportToPlayer.CreatePlayerButtons(tab, callbackUpdateSelected)
-    -- Clear old buttons
-    for _, btn in ipairs(TeleportToPlayer.playerButtons) do
-        btn:Destroy()
-    end
-    TeleportToPlayer.playerButtons = {}
-
+-- Function to get list of player names excluding yourself
+function TeleportToPlayer.GetPlayersNames()
+    local names = {}
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
-            local btn = tab:AddButton({
-                Title = plr.DisplayName,
-                Description = plr.Name,
-                Callback = function()
-                    TeleportToPlayer.selectedPlayerName = plr.Name
-                    if callbackUpdateSelected then
-                        callbackUpdateSelected(plr.DisplayName)
-                    end
-                end
-            })
-            table.insert(TeleportToPlayer.playerButtons, btn)
+            table.insert(names, plr.Name)
         end
     end
+    return names
 end
-
--- Auto-refresh when players join/leave
-Players.PlayerAdded:Connect(function()
-    if TeleportToPlayer.dropdownOpen and TeleportToPlayer.refreshCallback then
-        TeleportToPlayer.refreshCallback()
-    end
-end)
-
-Players.PlayerRemoving:Connect(function()
-    if TeleportToPlayer.dropdownOpen and TeleportToPlayer.refreshCallback then
-        TeleportToPlayer.refreshCallback()
-    end
-end)
 
 return TeleportToPlayer
