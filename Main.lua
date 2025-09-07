@@ -72,6 +72,12 @@ print("Created Window:", Window)
 -- TAB ORDER
 --======================
 
+local TeleportPlayerTab = Window:AddTab({
+    Title = "Teleport to Player",
+     Icon = "user" 
+})
+print("Created Teleport to Player Tab:", TeleportPlayerTab)
+
 local autoSellTab = Window:AddTab({ 
     Title = "Auto Sell", 
     Icon = "shopping-cart" 
@@ -90,7 +96,9 @@ local ExtraTab = Window:AddTab({
 })
 print("Created Extra Tab:", ExtraTab)
 
-
+--======================
+-- Add Buttons for Teleport Tab
+--======================
 
 
 --======================
