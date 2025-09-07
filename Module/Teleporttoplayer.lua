@@ -31,7 +31,7 @@ function TeleportToPlayer.TeleportTo(name)
 end
 
 -- Function to create player buttons
-function TeleportToPlayer.CreatePlayerButtons(tab, callbackUpdateSelected)
+function TeleportToPlayer.CreatePlayerButtons(tab, toggleButton, callbackUpdateSelected)
     -- Clear old buttons
     for _, btn in ipairs(TeleportToPlayer.playerButtons) do
         btn:Destroy()
@@ -39,7 +39,7 @@ function TeleportToPlayer.CreatePlayerButtons(tab, callbackUpdateSelected)
     TeleportToPlayer.playerButtons = {}
 
     for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer then  -- skip yourself
+        if plr ~= LocalPlayer then
             local btn = tab:AddButton({
                 Title = plr.DisplayName,
                 Description = plr.Name,
@@ -53,7 +53,6 @@ function TeleportToPlayer.CreatePlayerButtons(tab, callbackUpdateSelected)
             table.insert(TeleportToPlayer.playerButtons, btn)
         end
     end
-
 end
 
 -- Auto-refresh when players join/leave
