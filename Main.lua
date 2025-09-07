@@ -7,28 +7,28 @@
 -- Preload UI
 local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
-local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Main.lua"))()  -- remove the internal HttpGet for PurchaseWeather
+--local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Main.lua"))()  -- remove the internal HttpGet for PurchaseWeather
 
---local function tryLoad(url, name)
---    local success, result = pcall(function()
---        local code = game:HttpGet(url)
---        return loadstring(code)()
---    end)
+local function tryLoad(url, name)
+    local success, result = pcall(function()
+        local code = game:HttpGet(url)
+        return loadstring(code)()
+    end)
 
---    if success then
---        print(name .. " loaded successfully!")
---        return result
---    else
---        warn("⚠ Error loading " .. name .. ": " .. tostring(result))
---       return nil
---    end
---end
+    if success then
+        print(name .. " loaded successfully!")
+        return result
+    else
+        warn("⚠ Error loading " .. name .. ": " .. tostring(result))
+       return nil
+    end
+end
 
 -- Usage
---local PurchaseWeather = tryLoad(
---    "https://raw.githubusercontent.com/elony-7/RBXAFSH/main/PurchaseWeather.lua",
---    "PurchaseWeather"
---)
+local PurchaseWeather = tryLoad(
+    "https://raw.githubusercontent.com/elony-7/RBXAFSH/main/PurchaseWeather.lua",
+    "PurchaseWeather"
+)
 
 local Window = UI:CreateWindow({
     Title = "IkanTerbang Hub",
