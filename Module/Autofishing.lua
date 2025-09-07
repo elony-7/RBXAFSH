@@ -17,6 +17,11 @@ local function waitForEquip()
     until tool or not AutoFishing.Enabled
 end
 
+-- Notification helper (use print for now)
+local function log(msg)
+    print(msg)
+end
+
 -- Main loop for auto fishing
 function AutoFishing.Start()
     AutoFishing.Enabled = true
@@ -31,7 +36,7 @@ function AutoFishing.Start()
                     :WaitForChild("sleitnick_net@0.2.0").net
             end)
             if not ok or not netFolder then
-                warn("⚠️ Net folder not found, retrying...")
+                log("⚠️ Net folder not found, retrying...")
                 task.wait(1)
                 continue
             end
@@ -39,10 +44,13 @@ function AutoFishing.Start()
             -- Equip fishing rod
             local equipRE = netFolder:FindFirstChild("RE/EquipToolFromHotbar")
             if equipRE then
-                pcall(function() equipRE:FireServer(1) end)
+                pcall(function()
+                    equipRE:FireServer(1)
+                end)
+                log("🎯 Tried to equip fishing rod (slot 1)")
                 waitForEquip()
             else
-                warn("⚠️ EquipToolFromHotbar not found!")
+                log("⚠️ EquipToolFromHotbar not found!")
             end
 
             -- Charge fishing rod
@@ -51,6 +59,7 @@ function AutoFishing.Start()
                 pcall(function()
                     chargeRF:InvokeServer(workspace:GetServerTimeNow())
                 end)
+                log("⚡ Charging rod...")
             end
 
             -- Start fishing minigame
@@ -59,6 +68,7 @@ function AutoFishing.Start()
                 pcall(function()
                     startRF:InvokeServer(-1.2379989624023438, 1)
                 end)
+                log("🎮 Starting fishing minigame...")
             end
 
             task.wait(2.5)
@@ -66,7 +76,10 @@ function AutoFishing.Start()
             -- Complete fishing minigame
             local completedRE = netFolder:FindFirstChild("RE/FishingCompleted")
             if completedRE and completedRE:IsA("RemoteEvent") then
-                pcall(function() completedRE:FireServer() end)
+                pcall(function()
+                    completedRE:FireServer()
+                end)
+                log("✅ Completing fishing minigame...")
             end
         end
     end)

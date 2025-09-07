@@ -64,10 +64,12 @@ FarmTab:AddToggle("AutoFishingPerfect", {
 }):OnChanged(function(val)
     if val then
         AutoFishing.Start()
-        addLog("✅ Auto Fishing Perfect ENABLED")
+        print("✅ Auto Fishing Perfect ENABLED")
+        Notify("✅ Auto Fishing Perfect", "Auto Fishing Perfect ENABLED", 2)
     else
         AutoFishing.Stop()
-        addLog("❌ Auto Fishing Perfect DISABLED")
+        print("❌ Auto Fishing Perfect DISABLED")
+        notify("❌ Auto Fishing Perfect", "Auto Fishing Perfect DISABLED", 2)
     end
 end)
 
