@@ -53,20 +53,51 @@ local ExtraTab = Window:AddTab({Title = "Extra", Icon = "settings"})
 local Options = Fluent.Options
 
 --========================
--- Teleport Tab Buttons
+-- Teleport Tab (Dropdown)
 --========================
 do
-    for name, pos in pairs(TeleportModule.Locations) do
-        TeleportTab:AddButton({
-            Title = name,
-            Description = "Teleport to " .. name,
-            Callback = function()
-                TeleportModule.TeleportTo(pos)
-                Notify("Teleported", "You have been teleported to " .. name, 1)
-            end
-        })
+    -- Create a list of locations
+    local locationList = {}
+    for name, _ in pairs(TeleportModule.Locations) do
+        table.insert(locationList, name)
     end
+
+    -- Default selection
+    local selectedLocation = locationList[1] or "None"
+
+    -- Add Dropdown
+    local locationDropdown = TeleportTab:AddDropdown("SelectLocationDropdown", {
+        Title = "Select Location",
+        Values = locationList,
+        Multi = false,
+        Default = selectedLocation
+    })
+
+    -- Set the default value
+    locationDropdown:SetValue(selectedLocation)
+
+    -- Handle dropdown change
+    locationDropdown:OnChanged(function(value)
+        selectedLocation = value
+        print("Selected location:", value)
+    end)
+
+    -- Teleport button
+    TeleportTab:AddButton({
+        Title = "Teleport",
+        Description = "Teleport to the selected location",
+        Callback = function()
+            local pos = TeleportModule.Locations[selectedLocation]
+            if pos then
+                TeleportModule.TeleportTo(pos)
+                Notify("Teleported", "You have been teleported to " .. selectedLocation, 2)
+            else
+                Notify("Error", "Location not found!", 2)
+            end
+        end
+    })
 end
+
 
 --========================
 -- Teleport to Player Tab
