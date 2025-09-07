@@ -19,13 +19,14 @@ Notify("Notification", "Script is loading...", 5)
 --========================
 -- Preload Modules
 --========================
+local AutoFishing = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Autofishing.lua"))()
 local TeleportModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleport.lua"))()
 local TeleportToPlayer = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleporttoplayer.lua"))()
 local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PurchaseWeather.lua"))()
 local autosellmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main//Module/sellAllItems.lua"))()
 local antiafkmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Antiafk.lua"))()
 
-print("Modules loaded:", TeleportModule, TeleportToPlayer, PurchaseWeather, autosellmodule, antiafkmodule)
+print("Modules loaded:", AutoFishing, TeleportModule, TeleportToPlayer, PurchaseWeather, autosellmodule, antiafkmodule)
 
 --========================
 -- Create Main Window
@@ -44,6 +45,7 @@ print("Created Window:", Window)
 --========================
 -- Create Tabs
 --========================
+local FarmTab = Window:AddTab({Title = "Farm", Icon = "play"})
 local TeleportTab = Window:AddTab({Title = "Teleport", Icon = "map"})
 local TeleportPlayerTab = Window:AddTab({Title = "Teleport to Player", Icon = "user"})
 local AutoSellTab = Window:AddTab({Title = "Auto Sell", Icon = "shopping-cart"})
@@ -51,6 +53,23 @@ local WeatherTab = Window:AddTab({Title = "Weather", Icon = "cloud-rain"})
 local ExtraTab = Window:AddTab({Title = "Extra", Icon = "settings"})
 
 local Options = Fluent.Options
+
+--========================
+-- Farm Tab 
+--========================
+FarmTab:AddToggle("AutoFishingPerfect", {
+    Title = "🎣 Auto Fishing Perfect",
+    Description = "Automatically starts fishing minigame perfectly.",
+    Default = false
+}):OnChanged(function(val)
+    if val then
+        AutoFishing.Start()
+        addLog("✅ Auto Fishing Perfect ENABLED")
+    else
+        AutoFishing.Stop()
+        addLog("❌ Auto Fishing Perfect DISABLED")
+    end
+end)
 
 --========================
 -- Teleport Tab (Dropdown)
