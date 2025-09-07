@@ -6,8 +6,9 @@ local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.c
 print("Loaded PurchaseWeather:", PurchaseWeather)
 print("Has BuyStorm:", PurchaseWeather and PurchaseWeather.BuyStorm)
 
-local autoSellAll = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/autoSellAll.lua"))()  -- remove the internal HttpGet for PurchaseWeather
-
+local autoSellAll = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/sellAllItems.lua"))()  -- remove the internal HttpGet for PurchaseWeather
+print("Loaded PurchaseWeather:", PurchaseWeather)
+print("Has BuyStorm:", PurchaseWeather and PurchaseWeather.BuyStorm)
 --========================
 -- UI Creation
 --========================
