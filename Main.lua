@@ -3,9 +3,7 @@ local weatherCode = game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXA
 --========================
 -- UI Creation
 --========================
--- Preload UI
-local UIcode = game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua")
-local UI = loadstring(UIcode)()
+
 
 local Window = UI:CreateWindow({
     Title = "IkanTerbang Hub",
