@@ -1,15 +1,17 @@
---local weatherCode = game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/PurchaseWeather.lua") local success, PurchaseWeather = pcall(function() return loadstring(weatherCode)() end) if not success then warn("Failed to load PurchaseWeather:", PurchaseWeather) end
---local weatherCode = game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/PurchaseWeather.lua")
---local PurchaseWeather = loadstring(weatherCode)()
+--========================
+--  Preload Functions
+--========================
+
+local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/PurchaseWeather.lua"))()  -- remove the internal HttpGet for PurchaseWeather
+print("Loaded PurchaseWeather:", PurchaseWeather)
+print("Has BuyStorm:", PurchaseWeather and PurchaseWeather.BuyStorm)
+
 --========================
 -- UI Creation
 --========================
 -- Preload UI
 local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
-local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/PurchaseWeather.lua"))()  -- remove the internal HttpGet for PurchaseWeather
-print("Loaded PurchaseWeather:", PurchaseWeather)
-print("Has BuyStorm:", PurchaseWeather and PurchaseWeather.BuyStorm)
 
 --=============== USE THIS ONLY WHEN IT RETURN NILL TO LOADSTRING===============
 --local function tryLoad(url, name)
