@@ -99,7 +99,7 @@ function AutoFishing.Start()
                 end)
                 log("🎮 Starting fishing minigame...")
             end
-
+            log("⏳ Waiting for fishing minigame to complete...")
             task.wait(2.5)
 
             -- Complete fishing minigame
