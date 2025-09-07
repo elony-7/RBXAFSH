@@ -7,7 +7,7 @@
 -- Preload UI
 local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
- local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Main.lua"))()  -- remove the internal HttpGet for PurchaseWeather
+loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Main.lua"))()  -- remove the internal HttpGet for PurchaseWeather
  print("Loaded PurchaseWeather:", PurchaseWeather)
  print("Has BuyStorm:", PurchaseWeather and PurchaseWeather.BuyStorm)
 
