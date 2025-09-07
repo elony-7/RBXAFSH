@@ -79,6 +79,7 @@ local TeleportTab = Window:AddTab({
     Title = "Teleport", 
     Icon = "map" 
 })
+print("Created Teleport Tab:", TeleportTab)
 
 local autoSellTab = Window:AddTab({ 
     Title = "Auto Sell", 
