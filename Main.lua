@@ -69,7 +69,7 @@ FarmTab:AddToggle("AutoFishingPerfect", {
     else
         AutoFishing.Stop()
         print("❌ Auto Fishing Perfect DISABLED")
-        notify("❌ Auto Fishing Perfect", "Auto Fishing Perfect DISABLED", 2)
+        Notify("❌ Auto Fishing Perfect", "Auto Fishing Perfect DISABLED", 2)
     end
 end)
 
