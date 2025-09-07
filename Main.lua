@@ -1,3 +1,11 @@
+
+
+    Fluent:Notify({
+        Title = "Notification",
+        Content = "The Script is loading....",
+        Duration = 5 -- Set to nil to make the notification not disappear
+    })
+
 --========================
 --  Preload Functions
 --========================
@@ -251,3 +259,8 @@ end)
 --         PurchaseWeather.BuySnow()
 --     end
 -- })
+    Fluent:Notify({
+        Title = "Notification",
+        Content = "The Script has loaded successfully!",
+        Duration = 3 -- Set to nil to make the notification not disappear
+    })
