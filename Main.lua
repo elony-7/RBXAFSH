@@ -5,8 +5,8 @@
 -- UI Creation
 --========================
 -- Preload UI
---local UIcode = game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua")
---local UI = loadstring(UIcode)()
+local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local weather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/PurchaseWeather.lua"))()
 
 local Window = UI:CreateWindow({
     Title = "IkanTerbang Hub",
