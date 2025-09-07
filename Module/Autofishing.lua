@@ -109,7 +109,7 @@ function AutoFishing.Start()
                 log("⏳ Waiting for fishing minigame to complete...")
             end
 
-            task.wait(2.3) -- Wait for the minigame duration
+            task.wait(2.6) -- Wait for the minigame duration
 
             -- Complete fishing minigame
             local completedRE = netFolder:FindFirstChild("RE/FishingCompleted")
