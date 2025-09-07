@@ -1,6 +1,8 @@
--- Load PurchaseWeather module safely
-local weather = game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/PurchaseWeather.lua")
-local PurchaseWeather = loadstring(weather)()
+local weather = game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/PurchaseWeather.lua")
+local success, PurchaseWeather = pcall(function() return loadstring(weather)() end)
+if not success then
+    warn("Failed to load PurchaseWeather:", PurchaseWeather)
+end
 
 --========================
 -- UI Creation
@@ -8,9 +10,9 @@ local PurchaseWeather = loadstring(weather)()
 local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local Window = UI:CreateWindow({
-    Title = "IkanTerbang Hub", 
+    Title = "IkanTerbang Hub",
     SubTitle = "",
-    TabWidth = 140,     
+    TabWidth = 140,
     Size = UDim2.fromOffset(580, 400),
     Acrylic = true,
     Theme = "Dark",
@@ -27,7 +29,6 @@ local WeatherTab = Window:AddTab({
 --======================
 -- Load PurchaseWeather module
 --======================
-local PurchaseWeather = loadstring(weather)()
 --======================
 -- Add Buttons for Weather
 --======================
