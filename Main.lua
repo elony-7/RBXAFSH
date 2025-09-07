@@ -2,11 +2,11 @@
 --  Preload Functions
 --========================
 
-local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/PurchaseWeather.lua"))()  -- remove the internal HttpGet for PurchaseWeather
+local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PurchaseWeather.lua"))()  -- remove the internal HttpGet for PurchaseWeather
 print("Loaded PurchaseWeather:", PurchaseWeather)
 print("Has BuyStorm:", PurchaseWeather and PurchaseWeather.BuyStorm)
 
-local autosellmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/sellAllItems.lua"))()  -- remove the internal HttpGet for PurchaseWeather
+local autosellmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main//Module/sellAllItems.lua"))()  -- remove the internal HttpGet for PurchaseWeather
 print("Loaded AutoSellModule:", autosellmodule)
 print("Has sellAllItems:", autosellmodule and autosellmodule.sellAllItems)
 
