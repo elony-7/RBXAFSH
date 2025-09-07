@@ -1,14 +1,24 @@
 --========================
 --  Preload Functions
 --========================
-
+--======================
+-- preLoad function PurchaseWeather module
+--======================
 local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PurchaseWeather.lua"))()  -- remove the internal HttpGet for PurchaseWeather
 print("Loaded PurchaseWeather:", PurchaseWeather)
 print("Has BuyStorm:", PurchaseWeather and PurchaseWeather.BuyStorm)
-
+--======================
+-- preLoad function autosell module
+--======================
 local autosellmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main//Module/sellAllItems.lua"))()  -- remove the internal HttpGet for PurchaseWeather
 print("Loaded AutoSellModule:", autosellmodule)
 print("Has sellAllItems:", autosellmodule and autosellmodule.sellAllItems)
+--======================
+-- preLoad function anti-afk
+--======================
+local antiafkmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Antiafk.lua"))()  -- remove the internal HttpGet for PurchaseWeather
+print("Loaded AntiAFKModule:", antiafkmodule)
+
 
 --========================
 -- UI Creation
@@ -41,6 +51,11 @@ local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/rele
 
 --=============== USE THIS ONLY WHEN IT RETURN NILL TO LOADSTRING===============
 
+--======================
+-- Create Window
+--======================
+
+
 local Window = UI:CreateWindow({
     Title = "IkanTerbang Hub",
     SubTitle = "",
@@ -65,11 +80,11 @@ local WeatherTab = Window:AddTab({
     Icon = "cloud-rain" 
 })
 
+
+
+
 --======================
--- Load PurchaseWeather module
---======================
---======================
--- Add Buttons for Weather
+-- Add Buttons for auto sell
 --======================
 autoSellTab:AddButton({
     Title = "Sell All Items",
@@ -111,6 +126,10 @@ autoSellTab:AddSlider("SellDelaySlider", {
     print("🔧 Auto Sell delay set to " .. autosellmodule.sellDelayMinutes .. " minute(s)")
 end)
 
+--======================
+-- Add Buttons for Weather
+--======================
+
 WeatherTab:AddButton({
     Title = "Buy Storm Weather",
     Callback = function()
@@ -118,6 +137,20 @@ WeatherTab:AddButton({
         PurchaseWeather.BuyStorm()
     end
 })
+
+ExtraTab:AddToggle("AntiAFK", {
+    Title = "🛡️ Anti-AFK",
+    Description = "Prevents being disconnected due to inactivity",
+    Default = false
+}):OnChanged(function(val)
+    if val then
+        antiafkmodule.start()
+        addLog("🛡️ Anti-AFK ENABLED")
+    else
+        antiafkmodule.stop()
+        addLog("🛡️ Anti-AFK DISABLED")
+    end
+end)
 
 -- Example: if you want to add more weather later
 -- WeatherTab:AddButton({
