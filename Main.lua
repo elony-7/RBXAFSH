@@ -2,9 +2,19 @@
 --  Preload Functions
 --========================
 
-
+--========================
+-- preLoad function Teleport module
+--======================
 local TeleportModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleport.lua"))()  -- remove the internal HttpGet for TeleportModule
 print("Loaded TeleportModule:", TeleportModule)
+
+--========================
+-- preLoad function Teleport to Player Module
+--======================
+
+local TeleportToPlayer = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleporttoplayer.lua"))()  
+print("Loaded TeleportToPlayer Module:", TeleportToPlayer)
+
 --========================
 -- preLoad function PurchaseWeather module
 --======================
