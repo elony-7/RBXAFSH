@@ -6,15 +6,37 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- Flag to track status
 AutoFishing.Enabled = false
 
--- Helper function to wait for the tool to equip
 local function waitForEquip()
-    local char = Players.LocalPlayer.Character
-    if not char then return end
-    local tool
-    repeat
-        tool = char:FindFirstChildOfClass("Tool")
-        task.wait(0.1)
-    until tool or not AutoFishing.Enabled
+    -- Check if "!!!EQUIPPED_TOOL!!!" exists and has a child named "main"
+    local equippedTool = character:FindFirstChild("!!!EQUIPPED_TOOL!!!")
+    if equippedTool and equippedTool:FindFirstChild("main") then
+        print("✅ Equipped tool with 'main' already present.")
+        return
+    end
+
+    print("⏳ Waiting for equipped tool with 'main' to appear...")
+
+    while true do
+        local child = character.ChildAdded:Wait()
+        print("Child added to character:", child.Name)
+
+        if child.Name == "!!!EQUIPPED_TOOL!!!" then
+            -- Wait for "main" to appear inside "!!!EQUIPPED_TOOL!!!"
+            local mainChild = child:FindFirstChild("Main")
+            if mainChild then
+                print("✅ Equipped tool with 'main' detected immediately.")
+                break
+            else
+                print("Waiting for 'main' inside equipped tool...")
+                mainChild = child.ChildAdded:Wait()
+                while mainChild.Name ~= "Main" do
+                    mainChild = child.ChildAdded:Wait()
+                end
+                print("✅ 'main' detected inside equipped tool.")
+                break
+            end
+        end
+    end
 end
 
 -- Notification helper (use print for now)
