@@ -109,6 +109,14 @@ function AutoFishing.Start()
                 log("⏳ Waiting for fishing minigame to complete...")
             end
 
+            -- Complete fishing minigame
+            local completedRE = netFolder:FindFirstChild("RE/FishingCompleted")
+            if completedRE and completedRE:IsA("RemoteEvent") then
+                pcall(function()
+                    completedRE:FireServer()
+                end)
+                log("✅ Completing fishing minigame...")
+            end
         end
     end)
 end
