@@ -3,7 +3,7 @@
 --========================
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-print("Loaded Fluent:", Fluent)
+print("Loaded Fluent:", Fluent)   
 
 fluent:Notify({
     Title = "IkanTerbang Hub",
