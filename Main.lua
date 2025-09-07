@@ -161,12 +161,12 @@ end
 -- Player Tab
 --========================
 do -- Unlimited Jump Toggle
-PlayerTab:AddToggle("UnlimitedJump", {
-    Title = "♾️ Unlimited Jump",
-    Description = "Allows jumping infinitely",
-    Default = false
-}):OnChanged(function(val)
-    PlayerModule.SetUnlimitedJump(val)
+    PlayerTab:AddToggle("UnlimitedJump", {
+        Title = "♾️ Unlimited Jump",
+        Description = "Allows jumping infinitely",
+        Default = false
+    }):OnChanged(function(val)
+        PlayerModule.SetUnlimitedJump(val)
 end)
 
     do -- NoClip Toggle
