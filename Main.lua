@@ -66,6 +66,8 @@ local Window = UI:CreateWindow({
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.RightControl
 })
+print("Created Window:", Window)
+
 --======================
 -- TAB ORDER
 --======================
@@ -74,18 +76,19 @@ local autoSellTab = Window:AddTab({
     Title = "Auto Sell", 
     Icon = "shopping-cart" 
 })
-
+print("Created Auto Sell Tab:", autoSellTab)
 
 local WeatherTab = Window:AddTab({ 
     Title = "Weather", 
     Icon = "cloud-rain" 
 })
+print("Created Weather Tab:", WeatherTab)
 
 local ExtraTab = Window:AddTab({ 
     Title = "Extra", 
     Icon = "settings" 
 })
-
+print("Created Extra Tab:", ExtraTab)
 
 
 
