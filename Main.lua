@@ -306,4 +306,4 @@ end)
         Title = "Notification",
         Content = "The Script has loaded successfully!",
         Duration = 3 -- Set to nil to make the notification not disappear
-    })
+    })     
