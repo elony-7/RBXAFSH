@@ -151,6 +151,8 @@ end
 --======================
 -- Get initial player list (exclude yourself)
 local playerList = TeleportToPlayer.GetInitialPlayers() or {}
+if #playerList == 0 then
+    table.insert(playerList, "None")
 end
 -- Set initial selection
 local selectedPlayer = playerList[1] or "None"
