@@ -94,22 +94,21 @@ function AutoFishing.Start()
             -- Start fishing minigame
             local startRF = netFolder:FindFirstChild("RF/RequestFishingMinigameStarted")
             if startRF and startRF:IsA("RemoteFunction") then
-                pcall(function()
-                    startRF:InvokeServer(-1.2379989624023438, 1)
-                end)
-                log("🎮 Starting fishing minigame...")
-            end
-            log("⏳ Waiting for fishing minigame to complete...")
-            task.wait(1)
+                log("🎮 Starting fishing minigame...") -- log immediately before sending
 
-            -- Complete fishing minigame
-            local completedRE = netFolder:FindFirstChild("RE/FishingCompleted")
-            if completedRE and completedRE:IsA("RemoteEvent") then
-                pcall(function()
-                    completedRE:FireServer()
+                local success, result = pcall(function()
+                    return startRF:InvokeServer(-1.2379989624023438, 1)
                 end)
-                log("✅ Completing fishing minigame...")
+
+                if success then
+                    log("✅ Minigame start acknowledged by server: " .. tostring(result))
+                else
+                    log("❌ Failed to start minigame: " .. tostring(result))
+                end
+
+                log("⏳ Waiting for fishing minigame to complete...")
             end
+
         end
     end)
 end
