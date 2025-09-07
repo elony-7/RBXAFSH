@@ -1,53 +1,55 @@
--- AutoFishing.lua
 local AutoFishing = {}
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
 
 -- Flag to track status
 AutoFishing.Enabled = false
 
-local function waitForEquip()
-    -- Check if "!!!EQUIPPED_TOOL!!!" exists and has a child named "main"
+-- Helper: log messages
+local function log(msg)
+    print(msg)
+end
+
+-- Wait for the equipped fishing tool
+local function waitForEquip(character)
+    -- Check if tool already exists and has 'Main'
     local equippedTool = character:FindFirstChild("!!!EQUIPPED_TOOL!!!")
-    if equippedTool and equippedTool:FindFirstChild("main") then
-        print("✅ Equipped tool with 'main' already present.")
+    if equippedTool and equippedTool:FindFirstChild("Main") then
+        log("✅ Equipped tool with 'Main' already present.")
         return
     end
 
-    print("⏳ Waiting for equipped tool with 'main' to appear...")
+    log("⏳ Waiting for equipped tool with 'Main'...")
 
-    while true do
+    while AutoFishing.Enabled do
         local child = character.ChildAdded:Wait()
-        print("Child added to character:", child.Name)
+        log("Child added to character:", child.Name)
 
         if child.Name == "!!!EQUIPPED_TOOL!!!" then
-            -- Wait for "main" to appear inside "!!!EQUIPPED_TOOL!!!"
             local mainChild = child:FindFirstChild("Main")
             if mainChild then
-                print("✅ Equipped tool with 'main' detected immediately.")
+                log("✅ Equipped tool with 'Main' detected immediately.")
                 break
             else
-                print("Waiting for 'main' inside equipped tool...")
+                log("Waiting for 'Main' inside equipped tool...")
                 mainChild = child.ChildAdded:Wait()
                 while mainChild.Name ~= "Main" do
                     mainChild = child.ChildAdded:Wait()
                 end
-                print("✅ 'main' detected inside equipped tool.")
+                log("✅ 'Main' detected inside equipped tool.")
                 break
             end
         end
     end
 end
 
--- Notification helper (use print for now)
-local function log(msg)
-    print(msg)
-end
-
--- Main loop for auto fishing
+-- Start auto fishing
 function AutoFishing.Start()
     AutoFishing.Enabled = true
     task.spawn(function()
+        local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
         while AutoFishing.Enabled do
             task.wait(0.5)
 
@@ -70,10 +72,15 @@ function AutoFishing.Start()
                     equipRE:FireServer(1)
                 end)
                 log("🎯 Tried to equip fishing rod (slot 1)")
-                waitForEquip()
             else
                 log("⚠️ EquipToolFromHotbar not found!")
+                task.wait(1)
+                continue
             end
+
+            -- Wait until the equipped tool is fully ready
+            waitForEquip(char)
+            log("✅ Fishing rod equipped, starting casting...")
 
             -- Charge fishing rod
             local chargeRF = netFolder:FindFirstChild("RF/ChargeFishingRod")
@@ -107,6 +114,7 @@ function AutoFishing.Start()
     end)
 end
 
+-- Stop auto fishing
 function AutoFishing.Stop()
     AutoFishing.Enabled = false
 end
