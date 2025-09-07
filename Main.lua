@@ -26,7 +26,7 @@ print("Loaded AntiAFKModule:", antiafkmodule)
 --========================
 -- Preload UI
 local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-
+print("Loaded UI:", UI)
 
 --=============== USE THIS ONLY WHEN IT RETURN NILL TO LOADSTRING===============
 --local function tryLoad(url, name)
