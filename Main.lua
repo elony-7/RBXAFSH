@@ -124,35 +124,34 @@ print("Created Extra Tab:", ExtraTab)
 --======================
 -- Add Buttons for Teleport Tab
 --======================
--- Track selected player
-local selectedPlayer = "None"
-local playerDropdown
-
--- Function to refresh dropdown whenever players join/leave
-local function refreshPlayerDropdown()
-    -- Destroy old dropdown if exists
-    if playerDropdown then
-        playerDropdown:Destroy()
-    end
-
-    -- Get current player list
-    local playerNames = TeleportToPlayer.GetPlayersNames()
-
-    -- Create new dropdown
-    playerDropdown = TeleportPlayerTab:AddDropdown({
-        Title = "Select Player",
-        Default = selectedPlayer,
-        Options = playerNames,
-        Callback = function(value)
-            selectedPlayer = value
-            TeleportToPlayer.selectedPlayerName = value
-            print("Selected player:", value)
+for name, pos in pairs(TeleportModule.Locations) do
+    TeleportTab:AddButton({
+        Title = name,
+        Description = "Teleport to " .. name,
+        Callback = function()
+            TeleportModule.TeleportTo(pos)  -- calls the function in the module
         end
     })
 end
 
--- Initial dropdown creation
-refreshPlayerDropdown()
+--======================
+-- Add Buttons for Teleport to Player Tab
+--======================
+
+-- Store selected player
+local selectedPlayer = "None"
+
+-- Create dropdown with initial players only
+local playerDropdown = TeleportPlayerTab:AddDropdown({
+    Title = "Select Player",
+    Default = "None",
+    Options = TeleportToPlayer.GetInitialPlayers(),
+    Callback = function(value)
+        selectedPlayer = value
+        TeleportToPlayer.selectedPlayerName = value
+        print("Selected player:", value)
+    end
+})
 
 -- Teleport button
 TeleportPlayerTab:AddButton({
@@ -163,10 +162,6 @@ TeleportPlayerTab:AddButton({
     end
 })
 
--- Auto-refresh dropdown when players join or leave
-local Players = game:GetService("Players")
-Players.PlayerAdded:Connect(refreshPlayerDropdown)
-Players.PlayerRemoving:Connect(refreshPlayerDropdown)
 --======================
 -- Add Buttons for auto sell Tab
 --======================

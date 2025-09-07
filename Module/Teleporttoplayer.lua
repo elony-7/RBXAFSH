@@ -28,8 +28,8 @@ function TeleportToPlayer.TeleportTo(name)
     end
 end
 
--- Function to get list of player names excluding yourself
-function TeleportToPlayer.GetPlayersNames()
+-- Function to get initial player names excluding yourself
+function TeleportToPlayer.GetInitialPlayers()
     local names = {}
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
