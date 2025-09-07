@@ -25,7 +25,7 @@ print("Loaded AntiAFKModule:", antiafkmodule)
 --========================
 -- Preload UI
 local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-print("Loaded UI:", UI)
+
 
 --=============== USE THIS ONLY WHEN IT RETURN NILL TO LOADSTRING===============
 --local function tryLoad(url, name)
@@ -64,9 +64,7 @@ local Window = UI:CreateWindow({
     Acrylic = true,
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.RightControl
-    print( "Window created:", Window    )
 })
-
 --======================
 -- TAB ORDER
 --======================
@@ -74,21 +72,17 @@ local Window = UI:CreateWindow({
 local autoSellTab = Window:AddTab({ 
     Title = "Auto Sell", 
     Icon = "shopping-cart" 
-    print( "Auto Sell Tab created:", autoSellTab )
 })
 
 
 local WeatherTab = Window:AddTab({ 
     Title = "Weather", 
     Icon = "cloud-rain" 
-    print( "Weather Tab created:", WeatherTab)
-    )
 })
 
 local ExtraTab = Window:AddTab({ 
     Title = "Extra", 
     Icon = "settings" 
-    print( "Extra Tab created:", ExtraTab)
 })
 
 
@@ -98,7 +92,7 @@ local ExtraTab = Window:AddTab({
 -- Add Buttons for auto sell
 --======================
 autoSellTab:AddButton({
-    Title = "Sell All Items" print("Sell All Items Button added"),
+    Title = "Sell All Items",
     Callback = function()
         -- Call the function from the module
         autosellmodule.sellAllItems()
@@ -106,7 +100,7 @@ autoSellTab:AddButton({
 })
 
 autoSellTab:AddToggle("AutoSellToggle", {
-    Title = "💰 Auto Sell" print("Auto Sell Items toggle created"),
+    Title = "💰 Auto Sell",
     Description = "Automatically sells all items at the specified interval.",
     Default = false
 }):OnChanged(function(val)
