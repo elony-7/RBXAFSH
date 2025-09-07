@@ -152,14 +152,27 @@ end
 --========================
 -- Weather Tab
 --========================
+--========================
+-- Weather Tab
+--========================
 do
-    WeatherTab:AddButton({
-        Title = "Buy Storm Weather",
-        Callback = function()
-            PurchaseWeather.BuyStorm()
-            Notify("Weather Purchased", "Storm weather purchased!", 2)
-        end
-    })
+    local weatherData = {
+        {Title = "Storm", Func = PurchaseWeather.BuyStorm},
+        {Title = "Wind", Func = PurchaseWeather.BuyWind},
+        {Title = "Cloudy", Func = PurchaseWeather.BuyCloudy},
+        {Title = "Snow", Func = PurchaseWeather.BuySnow},
+        {Title = "Radiant", Func = PurchaseWeather.BuyRadiant}
+    }
+
+    for _, weather in ipairs(weatherData) do
+        WeatherTab:AddButton({
+            Title = "Buy " .. weather.Title .. " Weather",
+            Callback = function()
+                weather.Func()
+                Notify("Weather Purchased", weather.Title .. " weather purchased!", 2)
+            end
+        })
+    end
 end
 
 --========================
