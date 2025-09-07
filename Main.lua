@@ -137,21 +137,30 @@ end
 --======================
 -- Add Buttons for Teleport to Player Tab
 --======================
+-- Get initial player list (exclude yourself)
+local playerList = TeleportToPlayer.GetInitialPlayers()
 
--- Store selected player
-local selectedPlayer = "None"
+-- Set initial selection
+local selectedPlayer = playerList[1] or "None"
+TeleportToPlayer.selectedPlayerName = selectedPlayer
 
--- Create dropdown with initial players only
-local playerDropdown = TeleportPlayerTab:AddDropdown({
+-- Create dropdown
+local playerDropdown = TeleportPlayerTab:AddDropdown("SelectPlayerDropdown", {
     Title = "Select Player",
-    Default = "None",
-    Options = TeleportToPlayer.GetInitialPlayers(),
-    Callback = function(value)
-        selectedPlayer = value
-        TeleportToPlayer.selectedPlayerName = value
-        print("Selected player:", value)
-    end
+    Values = playerList,   -- must be 'Values'
+    Multi = false,
+    Default = selectedPlayer
 })
+
+-- Set the default selected value
+playerDropdown:SetValue(selectedPlayer)
+
+-- Handle dropdown change
+playerDropdown:OnChanged(function(value)
+    selectedPlayer = value
+    TeleportToPlayer.selectedPlayerName = value
+    print("Selected player:", value)
+end)
 
 -- Teleport button
 TeleportPlayerTab:AddButton({
