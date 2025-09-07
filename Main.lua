@@ -133,16 +133,23 @@ local toggleButton = TeleportPlayerTab:AddButton({
     Callback = function()
         TeleportToPlayer.dropdownOpen = not TeleportToPlayer.dropdownOpen
         if TeleportToPlayer.dropdownOpen then
-            -- pass toggleButton to the callback
+            -- Show player buttons
             TeleportToPlayer.refreshCallback = function()
                 TeleportToPlayer.CreatePlayerButtons(TeleportPlayerTab, function(displayName)
-                    if toggleButton then
-                        toggleButton.Title = "Select Player: " .. displayName
+                    -- Update title
+                    toggleButton.Title = "Select Player: " .. displayName
+
+                    -- Hide dropdown and clear buttons after selection
+                    for _, btn in ipairs(TeleportToPlayer.playerButtons) do
+                        btn:Destroy()
                     end
+                    TeleportToPlayer.playerButtons = {}
+                    TeleportToPlayer.dropdownOpen = false
                 end)
             end
             TeleportToPlayer.refreshCallback()
         else
+            -- If dropdown was open, hide and clear buttons
             for _, btn in ipairs(TeleportToPlayer.playerButtons) do
                 btn:Destroy()
             end
@@ -150,6 +157,7 @@ local toggleButton = TeleportPlayerTab:AddButton({
         end
     end
 })
+
 
 -- Teleport Player button
 TeleportPlayerTab:AddButton({
