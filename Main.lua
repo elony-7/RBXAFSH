@@ -127,18 +127,24 @@ print("Created Extra Tab:", ExtraTab)
 TeleportToPlayer.dropdownOpen = false
 
 -- Toggle button to show/hide player list
+-- Assuming TeleportToPlayer module is already loaded
+-- local TeleportToPlayer = loadstring(...)()
+
+-- Create toggle button to show/hide player list
 local toggleButton = TeleportPlayerTab:AddButton({
     Title = "Select Player: None",
     Description = "Click to select player",
     Callback = function()
         TeleportToPlayer.dropdownOpen = not TeleportToPlayer.dropdownOpen
+
         if TeleportToPlayer.dropdownOpen then
-            -- pass toggleButton to the callback
+            -- Show player buttons
             TeleportToPlayer.refreshCallback = function()
-                TeleportToPlayer.CreatePlayerButtons(TeleportPlayerTab, toggleButton, function(displayName)
-                    -- update the toggleButton title
+                TeleportToPlayer.CreatePlayerButtons(TeleportPlayerTab, function(displayName)
+                    -- Update the toggle button title
                     toggleButton.Title = "Select Player: " .. displayName
-                    -- hide dropdown
+
+                    -- Hide dropdown after selecting
                     for _, btn in ipairs(TeleportToPlayer.playerButtons) do
                         btn:Destroy()
                     end
@@ -146,8 +152,10 @@ local toggleButton = TeleportPlayerTab:AddButton({
                     TeleportToPlayer.dropdownOpen = false
                 end)
             end
+
             TeleportToPlayer.refreshCallback()
         else
+            -- Hide dropdown manually
             for _, btn in ipairs(TeleportToPlayer.playerButtons) do
                 btn:Destroy()
             end
@@ -155,8 +163,6 @@ local toggleButton = TeleportPlayerTab:AddButton({
         end
     end
 })
-
-
 
 -- Teleport Player button
 TeleportPlayerTab:AddButton({
@@ -166,6 +172,7 @@ TeleportPlayerTab:AddButton({
         TeleportToPlayer.TeleportTo(TeleportToPlayer.selectedPlayerName)
     end
 })
+
 
 --======================
 -- Add Buttons for Teleport Tab

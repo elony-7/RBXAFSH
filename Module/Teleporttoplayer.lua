@@ -9,10 +9,14 @@ TeleportToPlayer.selectedPlayerName = "None"
 -- Store buttons for cleanup
 TeleportToPlayer.playerButtons = {}
 
+-- Track dropdown state
+TeleportToPlayer.dropdownOpen = false
+
 -- Function to teleport to a player
 function TeleportToPlayer.TeleportTo(name)
     if name == "None" then
-        return warn("❌ No player selected")
+        warn("❌ No player selected")
+        return
     end
 
     -- Wait for local character if not loaded
@@ -26,12 +30,13 @@ function TeleportToPlayer.TeleportTo(name)
             CFrame.new(targetPlayer.Character.HumanoidRootPart.Position + Vector3.new(0,5,0))
         print("✅ Teleported to " .. targetPlayer.DisplayName)
     else
-        print("❌ Cannot teleport: player not ready")
+        warn("❌ Cannot teleport: player not ready")
     end
 end
 
 -- Function to create player buttons
-function TeleportToPlayer.CreatePlayerButtons(tab, toggleButton, callbackUpdateSelected)
+-- callbackUpdateSelected is called when a player is selected
+function TeleportToPlayer.CreatePlayerButtons(tab, callbackUpdateSelected)
     -- Clear old buttons
     for _, btn in ipairs(TeleportToPlayer.playerButtons) do
         btn:Destroy()
@@ -61,6 +66,7 @@ Players.PlayerAdded:Connect(function()
         TeleportToPlayer.refreshCallback()
     end
 end)
+
 Players.PlayerRemoving:Connect(function()
     if TeleportToPlayer.dropdownOpen and TeleportToPlayer.refreshCallback then
         TeleportToPlayer.refreshCallback()
