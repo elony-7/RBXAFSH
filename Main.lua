@@ -98,7 +98,7 @@ local ExtraTab = Window:AddTab({
 -- Add Buttons for auto sell
 --======================
 autoSellTab:AddButton({
-    Title = "Sell All Items",
+    Title = "Sell All Items" print("Sell All Items Button added"),
     Callback = function()
         -- Call the function from the module
         autosellmodule.sellAllItems()
@@ -106,7 +106,7 @@ autoSellTab:AddButton({
 })
 
 autoSellTab:AddToggle("AutoSellToggle", {
-    Title = "💰 Auto Sell",
+    Title = "💰 Auto Sell" print("Auto Sell Items toggle created"),
     Description = "Automatically sells all items at the specified interval.",
     Default = false
 }):OnChanged(function(val)
