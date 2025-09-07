@@ -1,7 +1,9 @@
 -- PurchaseWeather.lua
+print("[PurchaseWeather.lua] Loaded!")
 local PurchaseWeather = {}
 
 function PurchaseWeather.BuyStorm()
+    print("BuyStorm called!")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
     local netModule = ReplicatedStorage:FindFirstChild("Packages")
