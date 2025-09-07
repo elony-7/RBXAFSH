@@ -99,6 +99,7 @@ local TeleportPlayerTab = Window:AddTab({
     Title = "Teleport to Player", 
     Icon = "user" 
 })
+print("Created Teleport to Player Tab:", TeleportPlayerTab)
 
 local autoSellTab = Window:AddTab({ 
     Title = "Auto Sell", 
@@ -132,9 +133,12 @@ local toggleButton = TeleportPlayerTab:AddButton({
     Callback = function()
         TeleportToPlayer.dropdownOpen = not TeleportToPlayer.dropdownOpen
         if TeleportToPlayer.dropdownOpen then
+            -- pass toggleButton to the callback
             TeleportToPlayer.refreshCallback = function()
                 TeleportToPlayer.CreatePlayerButtons(TeleportPlayerTab, function(displayName)
-                    toggleButton.Title = "Select Player: " .. displayName
+                    if toggleButton then
+                        toggleButton.Title = "Select Player: " .. displayName
+                    end
                 end)
             end
             TeleportToPlayer.refreshCallback()

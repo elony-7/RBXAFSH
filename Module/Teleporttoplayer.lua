@@ -39,18 +39,21 @@ function TeleportToPlayer.CreatePlayerButtons(tab, callbackUpdateSelected)
     TeleportToPlayer.playerButtons = {}
 
     for _, plr in ipairs(Players:GetPlayers()) do
-        local btn = tab:AddButton({
-            Title = plr.DisplayName,
-            Description = plr.Name,
-            Callback = function()
-                TeleportToPlayer.selectedPlayerName = plr.Name
-                if callbackUpdateSelected then
-                    callbackUpdateSelected(plr.DisplayName)
+        if plr ~= LocalPlayer then  -- skip yourself
+            local btn = tab:AddButton({
+                Title = plr.DisplayName,
+                Description = plr.Name,
+                Callback = function()
+                    TeleportToPlayer.selectedPlayerName = plr.Name
+                    if callbackUpdateSelected then
+                        callbackUpdateSelected(plr.DisplayName)
+                    end
                 end
-            end
-        })
-        table.insert(TeleportToPlayer.playerButtons, btn)
+            })
+            table.insert(TeleportToPlayer.playerButtons, btn)
+        end
     end
+
 end
 
 -- Auto-refresh when players join/leave
