@@ -138,7 +138,7 @@ WeatherTab:AddButton({
     end
 })
 
-ExtraTab:AddToggle("AntiAFK", {
+ExtraTab:AddToggle("AntiAFKToggle", {
     Title = "🛡️ Anti-AFK",
     Description = "Prevents being disconnected due to inactivity",
     Default = false
