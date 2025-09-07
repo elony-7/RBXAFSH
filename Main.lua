@@ -154,6 +154,7 @@ local playerList = TeleportToPlayer.GetInitialPlayers()
 -- Set initial selection
 local selectedPlayer = playerList[1] or "None"
 TeleportToPlayer.selectedPlayerName = selectedPlayer
+ 
 
 -- Create dropdown
 local playerDropdown = TeleportPlayerTab:AddDropdown("SelectPlayerDropdown", {
