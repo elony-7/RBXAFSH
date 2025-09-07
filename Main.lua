@@ -1,7 +1,8 @@
 --========================
 --  Preload Functions
 --========================
---======================
+
+--========================
 -- preLoad function PurchaseWeather module
 --======================
 local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PurchaseWeather.lua"))()  -- remove the internal HttpGet for PurchaseWeather
@@ -83,6 +84,7 @@ local WeatherTab = Window:AddTab({
 
 
 
+
 --======================
 -- Add Buttons for auto sell
 --======================
@@ -138,7 +140,7 @@ WeatherTab:AddButton({
     end
 })
 
-ExtraTab:AddToggle("AntiAFK", {
+ExtraTab:AddToggle({
     Title = "🛡️ Anti-AFK",
     Description = "Prevents being disconnected due to inactivity",
     Default = false
@@ -147,7 +149,7 @@ ExtraTab:AddToggle("AntiAFK", {
         antiafkmodule.start()
         addLog("🛡️ Anti-AFK ENABLED")
     else
-        antiAFKModule.stop()
+        antiafkmodule.stop()
         addLog("🛡️ Anti-AFK DISABLED")
     end
 end)
