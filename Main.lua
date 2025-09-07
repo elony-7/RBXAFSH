@@ -75,6 +75,10 @@ print("Created Window:", Window)
 -- TAB ORDER
 --======================
 
+--======================
+-- Teleport Tab
+--======================
+
 local TeleportTab = Window:AddTab({ 
     Title = "Teleport", 
     Icon = "map" 
@@ -98,6 +102,44 @@ local ExtraTab = Window:AddTab({
     Icon = "settings" 
 })
 print("Created Extra Tab:", ExtraTab)
+
+
+--======================
+-- Teleport to Player Tab
+--======================
+-- Track dropdown state (global variable)
+TeleportToPlayer.dropdownOpen = false
+
+-- Toggle button to show/hide player list
+local toggleButton = TeleportPlayerTab:AddButton({
+    Title = "Select Player: None",
+    Description = "Click to select player",
+    Callback = function()
+        TeleportToPlayer.dropdownOpen = not TeleportToPlayer.dropdownOpen
+        if TeleportToPlayer.dropdownOpen then
+            TeleportToPlayer.refreshCallback = function()
+                TeleportToPlayer.CreatePlayerButtons(TeleportPlayerTab, function(displayName)
+                    toggleButton.Title = "Select Player: " .. displayName
+                end)
+            end
+            TeleportToPlayer.refreshCallback()
+        else
+            for _, btn in ipairs(TeleportToPlayer.playerButtons) do
+                btn:Destroy()
+            end
+            TeleportToPlayer.playerButtons = {}
+        end
+    end
+})
+
+-- Teleport Player button
+TeleportPlayerTab:AddButton({
+    Title = "Teleport to Player",
+    Description = "Teleport to the selected player",
+    Callback = function()
+        TeleportToPlayer.TeleportTo(TeleportToPlayer.selectedPlayerName)
+    end
+})
 
 --======================
 -- Add Buttons for Teleport Tab
