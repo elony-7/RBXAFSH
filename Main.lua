@@ -5,11 +5,11 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 print("Loaded Fluent:", Fluent)   
 
-fluent:Notify({
-    Title = "IkanTerbang Hub",
-    Content = "Loading Script...",
-    Duration = 5 -- Set to nil to make the notification not disappear
-})
+    Fluent:Notify({
+        Title = "Notification",
+        Content = "Script is loading...",
+        Duration = 5 -- Set to nil to make the notification not disappear
+    })
 
 --========================
 --  Preload Functions
@@ -150,7 +150,8 @@ end
 -- Add Buttons for Teleport to Player Tab
 --======================
 -- Get initial player list (exclude yourself)
-local playerList = TeleportToPlayer.GetInitialPlayers()
+local playerList = TeleportToPlayer.GetInitialPlayers() or {}
+end
 -- Set initial selection
 local selectedPlayer = playerList[1] or "None"
 TeleportToPlayer.selectedPlayerName = selectedPlayer
@@ -197,7 +198,7 @@ autoSellTab:AddButton({
     Callback = function()
         -- Call the function from the module
         autosellmodule.sellAllItems()
-        fluent:Notify({
+        Fluent:Notify({
             Title = "Sell Anywhere",
             Content = "All items sold!",
             Duration = 2 -- Set to nil to make the notification not disappear
@@ -213,7 +214,7 @@ autoSellTab:AddToggle("AutoSellToggle", {
     autosellmodule.autoSellEnabled = val
     if val then
         print("✅ Auto Sell ENABLED")
-        fluent:Notify({
+        Fluent:Notify({
             Title = "Auto Sell",
             Content = "Auto Sell ENABLED",
             Duration = 2 -- Set to nil to make the notification not disappear
@@ -226,11 +227,6 @@ autoSellTab:AddToggle("AutoSellToggle", {
         end)
     else
         print("❌ Auto Sell DISABLED")
-        fluent.Notify({
-            Title = "Auto Sell",
-            Content = "Auto Sell DISABLED",
-            Duration = 2 -- Set to nil to make the notification not disappear
-        })
     end
 end)
 
@@ -245,7 +241,7 @@ autoSellTab:AddSlider("SellDelaySlider", {
 }):OnChanged(function(val)
     autosellmodule.sellDelayMinutes = val
     print("🔧 Auto Sell delay set to " .. autosellmodule.sellDelayMinutes .. " minute(s)")
-    fluent.notify({
+    Fluent:Notify({
         Title = "Auto Sell Delay",
         Content = "Delay set to " .. val .. " minute(s)",
         Duration = 2 -- Set to nil to make the notification not disappear
@@ -261,7 +257,7 @@ WeatherTab:AddButton({
     Callback = function()
         -- Call the function from the module
         PurchaseWeather.BuyStorm()
-        fluent:Notify({
+        Fluent:Notify({
             Title = "Weather Purchased",
             Content = "Storm weather purchased!",
             Duration = 2 -- Set to nil to make the notification not disappear
@@ -281,7 +277,7 @@ ExtraTab:AddToggle("AntiAFKToggle", {
     if val then
         antiafkmodule.start()
         print("🛡️ Anti-AFK ENABLED")
-        notify({
+        Fluent:Notify({
             Title = "🛡️ Anti-AFK",
             Content = "Anti-AFK ENABLED",
             Duration = 2 -- Set to nil to make the notification not disappear
@@ -289,7 +285,7 @@ ExtraTab:AddToggle("AntiAFKToggle", {
     else
         antiafkmodule.stop()
         print("🛡️ Anti-AFK DISABLED")
-        notify({
+        Fluent:Notify({
             Title = "🛡️ Anti-AFK",
             Content = "Anti-AFK DISABLED",
             Duration = 2 -- Set to nil to make the notification not disappear
