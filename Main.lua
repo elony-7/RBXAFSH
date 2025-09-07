@@ -23,10 +23,11 @@ local AutoFishing = loadstring(game:HttpGet("https://raw.githubusercontent.com/e
 local TeleportModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleport.lua"))()
 local TeleportToPlayer = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleporttoplayer.lua"))()
 local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PurchaseWeather.lua"))()
+local PlayerModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PlayerModule.lua"))()
 local autosellmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main//Module/sellAllItems.lua"))()
 local antiafkmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Antiafk.lua"))()
 
-print("Modules loaded:", AutoFishing, TeleportModule, TeleportToPlayer, PurchaseWeather, autosellmodule, antiafkmodule)
+print("Modules loaded:", AutoFishing, TeleportModule, TeleportToPlayer, PurchaseWeather,PlayerModule, autosellmodule, antiafkmodule)
 
 --========================
 -- Create Main Window
