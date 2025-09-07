@@ -1,4 +1,9 @@
-
+--========================
+-- UI Creation
+--========================
+-- Preload UI
+local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+print("Loaded UI:", UI)
 
     Fluent:Notify({
         Title = "Notification",
@@ -42,12 +47,6 @@ local antiafkmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com
 print("Loaded AntiAFKModule:", antiafkmodule)
 
 
---========================
--- UI Creation
---========================
--- Preload UI
-local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-print("Loaded UI:", UI)
 
 --=============== USE THIS ONLY WHEN IT RETURN NILL TO LOADSTRING===============
 --local function tryLoad(url, name)
