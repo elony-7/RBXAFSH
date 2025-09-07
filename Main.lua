@@ -2,6 +2,9 @@
 --  Preload Functions
 --========================
 
+
+local TeleportModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleport.lua"))()  -- remove the internal HttpGet for TeleportModule
+print("Loaded TeleportModule:", TeleportModule)
 --========================
 -- preLoad function PurchaseWeather module
 --======================
@@ -72,11 +75,10 @@ print("Created Window:", Window)
 -- TAB ORDER
 --======================
 
-local TeleportPlayerTab = Window:AddTab({
-    Title = "Teleport to Player",
-     Icon = "user" 
+local TeleportTab = Window:AddTab({ 
+    Title = "Teleport", 
+    Icon = "map" 
 })
-print("Created Teleport to Player Tab:", TeleportPlayerTab)
 
 local autoSellTab = Window:AddTab({ 
     Title = "Auto Sell", 
@@ -99,10 +101,18 @@ print("Created Extra Tab:", ExtraTab)
 --======================
 -- Add Buttons for Teleport Tab
 --======================
-
+for name, pos in pairs(TeleportModule.Locations) do
+    TeleportTab:AddButton({
+        Title = name,
+        Description = "Teleport to " .. name,
+        Callback = function()
+            TeleportModule.TeleportTo(pos)  -- calls the function in the module
+        end
+    })
+end
 
 --======================
--- Add Buttons for auto sell
+-- Add Buttons for auto sell Tab
 --======================
 autoSellTab:AddButton({
     Title = "Sell All Items",
@@ -145,7 +155,7 @@ autoSellTab:AddSlider("SellDelaySlider", {
 end)
 
 --======================
--- Add Buttons for Weather
+-- Add Buttons for Weather Tab
 --======================
 
 WeatherTab:AddButton({
@@ -155,6 +165,10 @@ WeatherTab:AddButton({
         PurchaseWeather.BuyStorm()
     end
 })
+
+--======================
+-- Add Buttons for Extra Tab
+--======================
 
 ExtraTab:AddToggle("AntiAFKToggle", {
     Title = "🛡️ Anti-AFK",
