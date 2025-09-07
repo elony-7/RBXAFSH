@@ -6,6 +6,8 @@ local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.c
 print("Loaded PurchaseWeather:", PurchaseWeather)
 print("Has BuyStorm:", PurchaseWeather and PurchaseWeather.BuyStorm)
 
+local autoSellAll = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/autoSellAll.lua"))()  -- remove the internal HttpGet for PurchaseWeather
+
 --========================
 -- UI Creation
 --========================
@@ -49,9 +51,15 @@ local Window = UI:CreateWindow({
 --======================
 -- TAB ORDER
 --======================
+
+local autoSelltab = Window:AddTab({ 
+    Title = "Auto Sell", 
+    Icon = "shopping-cart" 
+})
+
 local WeatherTab = Window:AddTab({ 
     Title = "Weather", 
-    Icon = "(change this to weather icon code)" 
+    Icon = "Weather" 
 })
 
 --======================
@@ -60,6 +68,14 @@ local WeatherTab = Window:AddTab({
 --======================
 -- Add Buttons for Weather
 --======================
+autoSellTab:AddButton({
+    Title = "Sell All Items",
+    Callback = function()
+        -- Call the function from the module
+        AutoSellAll.sellAllItems()
+    end
+})
+
 WeatherTab:AddButton({
     Title = "Buy Storm Weather",
     Callback = function()
