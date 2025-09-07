@@ -11,7 +11,7 @@ local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/rele
  print("Loaded PurchaseWeather:", PurchaseWeather)
  print("Has BuyStorm:", PurchaseWeather and PurchaseWeather.BuyStorm)
 
-
+--=============== USE THIS ONLY WHEN IT RETURN NILL TO LOADSTRING===============
 --local function tryLoad(url, name)
 --    local success, result = pcall(function()
 --        local code = game:HttpGet(url)
@@ -32,6 +32,8 @@ local UI = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/rele
 --    "https://raw.githubusercontent.com/elony-7/RBXAFSH/main/PurchaseWeather.lua",
 --    "PurchaseWeather"
 --)
+
+--=============== USE THIS ONLY WHEN IT RETURN NILL TO LOADSTRING===============
 
 local Window = UI:CreateWindow({
     Title = "IkanTerbang Hub",
