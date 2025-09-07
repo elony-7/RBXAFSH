@@ -57,22 +57,23 @@ local Options = Fluent.Options
 --========================
 -- Farm Tab 
 --========================
-FarmTab:AddToggle("AutoFishingPerfect", {
-    Title = "🎣 Auto Fishing Perfect",
-    Description = "Automatically starts fishing minigame perfectly.",
-    Default = false
-}):OnChanged(function(val)
-    if val then
-        AutoFishing.Start()
-        print("✅ Auto Fishing Perfect ENABLED")
-        Notify("✅ Auto Fishing Perfect", "Auto Fishing Perfect ENABLED", 2)
-    else
-        AutoFishing.Stop()
-        print("❌ Auto Fishing Perfect DISABLED")
-        Notify("❌ Auto Fishing Perfect", "Auto Fishing Perfect DISABLED", 2)
-    end
-end)
-
+do
+    FarmTab:AddToggle("AutoFishingPerfect", {
+        Title = "🎣 Auto Fishing Perfect",
+        Description = "Automatically starts fishing minigame perfectly.",
+        Default = false
+    }):OnChanged(function(val)
+        if val then
+            AutoFishing.Start()
+            print("✅ Auto Fishing Perfect ENABLED")
+            Notify("✅ Auto Fishing Perfect", "Auto Fishing Perfect ENABLED", 2)
+        else
+            AutoFishing.Stop()
+            print("❌ Auto Fishing Perfect DISABLED")
+            Notify("❌ Auto Fishing Perfect", "Auto Fishing Perfect DISABLED", 2)
+        end
+    end)
+end
 --========================
 -- Teleport Tab (Dropdown)
 --========================
@@ -152,6 +153,29 @@ do
             Notify("Teleport", "Teleported to " .. selectedPlayer, 2)
         end
     })
+end
+
+
+--========================
+-- Player Tab
+--========================
+do -- Unlimited Jump Toggle
+PlayerTab:AddToggle("UnlimitedJump", {
+    Title = "♾️ Unlimited Jump",
+    Description = "Allows jumping infinitely",
+    Default = false
+}):OnChanged(function(val)
+    PlayerModule.SetUnlimitedJump(val)
+end)
+
+    do -- NoClip Toggle
+    PlayerTab:AddToggle("NoClip", {
+        Title = "🚫 NoClip",
+        Description = "Makes character pass through walls",
+        Default = false
+    }):OnChanged(function(val)
+        PlayerModule.SetNoClip(val)
+    end)
 end
 
 --========================
