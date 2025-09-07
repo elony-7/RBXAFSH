@@ -13,6 +13,12 @@ print("Has BuyStorm:", PurchaseWeather and PurchaseWeather.BuyStorm)
 local autosellmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main//Module/sellAllItems.lua"))()  -- remove the internal HttpGet for PurchaseWeather
 print("Loaded AutoSellModule:", autosellmodule)
 print("Has sellAllItems:", autosellmodule and autosellmodule.sellAllItems)
+--======================
+-- preLoad function anti-afk
+--======================
+local antiafkmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Antiafk.lua"))()  -- remove the internal HttpGet for PurchaseWeather
+print("Loaded AntiAFKModule:", antiafkmodule)
+
 
 --========================
 -- UI Creation
@@ -132,7 +138,19 @@ WeatherTab:AddButton({
     end
 })
 
-
+ExtraTab:AddToggle("AntiAFK", {
+    Title = "🛡️ Anti-AFK",
+    Description = "Prevents being disconnected due to inactivity",
+    Default = false
+}):OnChanged(function(val)
+    if val then
+        antiafkmodule.start()
+        addLog("🛡️ Anti-AFK ENABLED")
+    else
+        antiAFKModule.stop()
+        addLog("🛡️ Anti-AFK DISABLED")
+    end
+end)
 
 -- Example: if you want to add more weather later
 -- WeatherTab:AddButton({
