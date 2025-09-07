@@ -80,6 +80,11 @@ local WeatherTab = Window:AddTab({
     Icon = "cloud-rain" 
 })
 
+local ExtraTab = Window:AddTab({ 
+    Title = "Extra", 
+    Icon = "settings" 
+})
+
 
 
 
