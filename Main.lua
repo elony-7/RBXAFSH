@@ -6,9 +6,9 @@ local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.c
 print("Loaded PurchaseWeather:", PurchaseWeather)
 print("Has BuyStorm:", PurchaseWeather and PurchaseWeather.BuyStorm)
 
-local autoSellAll = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/sellAllItems.lua"))()  -- remove the internal HttpGet for PurchaseWeather
-print("Loaded PurchaseWeather:", PurchaseWeather)
-print("Has BuyStorm:", PurchaseWeather and PurchaseWeather.BuyStorm)
+local autosellmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/sellAllItems.lua"))()  -- remove the internal HttpGet for PurchaseWeather
+print("Loaded AutoSellModule:", autosellmodule)
+print("Has sellAllItems:", autosellmodule and autosellmodule.sellAllItems)
 --========================
 -- UI Creation
 --========================
@@ -53,14 +53,14 @@ local Window = UI:CreateWindow({
 -- TAB ORDER
 --======================
 
-local autoSelltab = Window:AddTab({ 
+local autoSellTab = Window:AddTab({ 
     Title = "Auto Sell", 
     Icon = "shopping-cart" 
 })
 
 local WeatherTab = Window:AddTab({ 
     Title = "Weather", 
-    Icon = "Weather" 
+    Icon = "cloud-rain" 
 })
 
 --======================
@@ -73,7 +73,7 @@ autoSellTab:AddButton({
     Title = "Sell All Items",
     Callback = function()
         -- Call the function from the module
-        AutoSellAll.sellAllItems()
+        autosellmodule.sellAllItems()
     end
 })
 
