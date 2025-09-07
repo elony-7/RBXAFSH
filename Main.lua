@@ -169,7 +169,7 @@ do -- Unlimited Jump Toggle
         PlayerModule.SetUnlimitedJump(val)
 end)
 
-    do -- NoClip Toggle
+do  -- NoClip Toggle
     PlayerTab:AddToggle("NoClip", {
         Title = "🚫 NoClip",
         Description = "Makes character pass through walls",
@@ -226,9 +226,7 @@ do
     })
 end
 
---========================
--- Weather Tab
---========================
+
 --========================
 -- Weather Tab
 --========================
