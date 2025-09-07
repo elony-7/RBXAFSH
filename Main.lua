@@ -124,45 +124,49 @@ print("Created Extra Tab:", ExtraTab)
 --======================
 -- Add Buttons for Teleport Tab
 --======================
-for name, pos in pairs(TeleportModule.Locations) do
-    TeleportTab:AddButton({
-        Title = name,
-        Description = "Teleport to " .. name,
-        Callback = function()
-            TeleportModule.TeleportTo(pos)  -- calls the function in the module
+-- Track selected player
+local selectedPlayer = "None"
+local playerDropdown
+
+-- Function to refresh dropdown whenever players join/leave
+local function refreshPlayerDropdown()
+    -- Destroy old dropdown if exists
+    if playerDropdown then
+        playerDropdown:Destroy()
+    end
+
+    -- Get current player list
+    local playerNames = TeleportToPlayer.GetPlayersNames()
+
+    -- Create new dropdown
+    playerDropdown = TeleportPlayerTab:AddDropdown({
+        Title = "Select Player",
+        Default = selectedPlayer,
+        Options = playerNames,
+        Callback = function(value)
+            selectedPlayer = value
+            TeleportToPlayer.selectedPlayerName = value
+            print("Selected player:", value)
         end
     })
 end
 
+-- Initial dropdown creation
+refreshPlayerDropdown()
 
--- Create a dropdown for player selection
-local playerDropdown = TeleportPlayerTab:AddDropdown({
-    Title = "Select Player",
-    Default = "None",
-    Options = TeleportToPlayer.GetPlayersNames(), -- initial player list
-    Callback = function(selectedName)
-        TeleportToPlayer.selectedPlayerName = selectedName
-        print("Selected player:", selectedName)
-    end
-})
-
--- Create a button to teleport to the selected player
+-- Teleport button
 TeleportPlayerTab:AddButton({
     Title = "Teleport to Player",
     Description = "Teleport to the selected player",
     Callback = function()
-        TeleportToPlayer.TeleportTo(TeleportToPlayer.selectedPlayerName)
+        TeleportToPlayer.TeleportTo(selectedPlayer)
     end
 })
 
--- Auto-refresh dropdown when players join/leave
+-- Auto-refresh dropdown when players join or leave
 local Players = game:GetService("Players")
-Players.PlayerAdded:Connect(function()
-    playerDropdown:SetOptions(TeleportToPlayer.GetPlayersNames())
-end)
-Players.PlayerRemoving:Connect(function()
-    playerDropdown:SetOptions(TeleportToPlayer.GetPlayersNames())
-end)
+Players.PlayerAdded:Connect(refreshPlayerDropdown)
+Players.PlayerRemoving:Connect(refreshPlayerDropdown)
 --======================
 -- Add Buttons for auto sell Tab
 --======================
