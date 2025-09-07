@@ -109,6 +109,8 @@ function AutoFishing.Start()
                 log("⏳ Waiting for fishing minigame to complete...")
             end
 
+            task.wait(1.5) -- Wait for the minigame duration
+
             -- Complete fishing minigame
             local completedRE = netFolder:FindFirstChild("RE/FishingCompleted")
             if completedRE and completedRE:IsA("RemoteEvent") then
