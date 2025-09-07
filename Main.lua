@@ -3,80 +3,33 @@
 --========================
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-print("Loaded Fluent:", Fluent)   
+print("Loaded Fluent:", Fluent)
 
+-- Helper function for notifications
+local function Notify(title, content, duration)
     Fluent:Notify({
-        Title = "Notification",
-        Content = "Script is loading...",
-        Duration = 5 -- Set to nil to make the notification not disappear
+        Title = title,
+        Content = content,
+        Duration = duration or 3
     })
+end
+
+Notify("Notification", "Script is loading...", 5)
 
 --========================
---  Preload Functions
+-- Preload Modules
 --========================
+local TeleportModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleport.lua"))()
+local TeleportToPlayer = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleporttoplayer.lua"))()
+local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PurchaseWeather.lua"))()
+local autosellmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main//Module/sellAllItems.lua"))()
+local antiafkmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Antiafk.lua"))()
 
---========================
--- preLoad function Teleport module
---======================
-local TeleportModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleport.lua"))()  -- remove the internal HttpGet for TeleportModule
-print("Loaded TeleportModule:", TeleportModule)
-
---========================
--- preLoad function Teleport to Player Module
---======================
-
-local TeleportToPlayer = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleporttoplayer.lua"))()  
-print("Loaded TeleportToPlayer Module:", TeleportToPlayer)
+print("Modules loaded:", TeleportModule, TeleportToPlayer, PurchaseWeather, autosellmodule, antiafkmodule)
 
 --========================
--- preLoad function PurchaseWeather module
---======================
-local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PurchaseWeather.lua"))()  -- remove the internal HttpGet for PurchaseWeather
-print("Loaded PurchaseWeather:", PurchaseWeather)
-print("Has BuyStorm:", PurchaseWeather and PurchaseWeather.BuyStorm)
---======================
--- preLoad function autosell module
---======================
-local autosellmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main//Module/sellAllItems.lua"))()  -- remove the internal HttpGet for PurchaseWeather
-print("Loaded AutoSellModule:", autosellmodule)
-print("Has sellAllItems:", autosellmodule and autosellmodule.sellAllItems)
---======================
--- preLoad function anti-afk
---======================
-local antiafkmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Antiafk.lua"))()  -- remove the internal HttpGet for PurchaseWeather
-print("Loaded AntiAFKModule:", antiafkmodule)
-
-
-
---=============== USE THIS ONLY WHEN IT RETURN NILL TO LOADSTRING===============
---local function tryLoad(url, name)
---    local success, result = pcall(function()
---        local code = game:HttpGet(url)
---        return loadstring(code)()
---    end)
---
---    if success then
---        print(name .. " loaded successfully!")
---        return result
---    else
---        warn("⚠ Error loading " .. name .. ": " .. tostring(result))
---       return nil
---    end
---end
-
--- Usage
---local PurchaseWeather = tryLoad(
---    "https://raw.githubusercontent.com/elony-7/RBXAFSH/main/PurchaseWeather.lua",
---    "PurchaseWeather"
---)
-
---=============== USE THIS ONLY WHEN IT RETURN NILL TO LOADSTRING===============
-
---======================
--- Create Window
---======================
-
-
+-- Create Main Window
+--========================
 local Window = Fluent:CreateWindow({
     Title = "IkanTerbang Hub",
     SubTitle = "",
@@ -88,222 +41,148 @@ local Window = Fluent:CreateWindow({
 })
 print("Created Window:", Window)
 
---======================
--- TAB ORDER
---======================
+--========================
+-- Create Tabs
+--========================
+local TeleportTab = Window:AddTab({Title = "Teleport", Icon = "map"})
+local TeleportPlayerTab = Window:AddTab({Title = "Teleport to Player", Icon = "user"})
+local AutoSellTab = Window:AddTab({Title = "Auto Sell", Icon = "shopping-cart"})
+local WeatherTab = Window:AddTab({Title = "Weather", Icon = "cloud-rain"})
+local ExtraTab = Window:AddTab({Title = "Extra", Icon = "settings"})
 
---======================
--- Teleport Tab
---======================
+local Options = Fluent.Options
 
-local TeleportTab = Window:AddTab({ 
-    Title = "Teleport", 
-    Icon = "map" 
-})
-print("Created Teleport Tab:", TeleportTab)
+--========================
+-- Teleport Tab Buttons
+--========================
+do
+    for name, pos in pairs(TeleportModule.Locations) do
+        TeleportTab:AddButton({
+            Title = name,
+            Description = "Teleport to " .. name,
+            Callback = function()
+                TeleportModule.TeleportTo(pos)
+                Notify("Teleported", "You have been teleported to " .. name, 1)
+            end
+        })
+    end
+end
 
--- Create Teleport to Player Tab
-local TeleportPlayerTab = Window:AddTab({ 
-    Title = "Teleport to Player", 
-    Icon = "user" 
-})
-print("Created Teleport to Player Tab:", TeleportPlayerTab)
+--========================
+-- Teleport to Player Tab
+--========================
+do
+    local playerList = TeleportToPlayer.GetInitialPlayers() or {}
+    if #playerList == 0 then table.insert(playerList, "None") end
+    local selectedPlayer = playerList[1]
 
-local autoSellTab = Window:AddTab({ 
-    Title = "Auto Sell", 
-    Icon = "shopping-cart" 
-})
-print("Created Auto Sell Tab:", autoSellTab)
+    TeleportToPlayer.selectedPlayerName = selectedPlayer
 
-local WeatherTab = Window:AddTab({ 
-    Title = "Weather", 
-    Icon = "cloud-rain" 
-})
-print("Created Weather Tab:", WeatherTab)
+    local playerDropdown = TeleportPlayerTab:AddDropdown("SelectPlayerDropdown", {
+        Title = "Select Player",
+        Values = playerList,
+        Multi = false,
+        Default = selectedPlayer
+    })
 
-local ExtraTab = Window:AddTab({ 
-    Title = "Extra", 
-    Icon = "settings" 
-})
-print("Created Extra Tab:", ExtraTab)
+    playerDropdown:SetValue(selectedPlayer)
+    playerDropdown:OnChanged(function(value)
+        selectedPlayer = value
+        TeleportToPlayer.selectedPlayerName = value
+        print("Selected player:", value)
+    end)
 
-
---======================
--- Add Buttons for Teleport Tab
---======================
-for name, pos in pairs(TeleportModule.Locations) do
-    TeleportTab:AddButton({
-        Title = name,
-        Description = "Teleport to " .. name,
+    TeleportPlayerTab:AddButton({
+        Title = "Teleport to Player",
+        Description = "Teleport to the selected player",
         Callback = function()
-            TeleportModule.TeleportTo(pos)  -- calls the function in the module
-            Fluent:Notify({
-                Title = "Teleported",
-                Content = "You have been teleported to " .. name,
-                Duration = 1 -- Set to nil to make the notification not disappear
-            })
+            TeleportToPlayer.TeleportTo(selectedPlayer)
+            Notify("Teleport", "Teleported to " .. selectedPlayer, 2)
         end
     })
 end
 
---======================
--- Add Buttons for Teleport to Player Tab
---======================
--- Get initial player list (exclude yourself)
-local playerList = TeleportToPlayer.GetInitialPlayers() or {}
-if #playerList == 0 then
-    table.insert(playerList, "None")
-end
--- Set initial selection
-local selectedPlayer = playerList[1] or "None"
-TeleportToPlayer.selectedPlayerName = selectedPlayer
- 
-
--- Create dropdown
-local playerDropdown = TeleportPlayerTab:AddDropdown("SelectPlayerDropdown", {
-    Title = "Select Player",
-    Values = playerList,   -- must be 'Values'
-    Multi = false,
-    Default = selectedPlayer
-})
-
--- Set the default selected value
-playerDropdown:SetValue(selectedPlayer)
-
--- Handle dropdown change
-playerDropdown:OnChanged(function(value)
-    selectedPlayer = value
-    TeleportToPlayer.selectedPlayerName = value
-    print("Selected player:", value)
-end)
-
--- Teleport button
-TeleportPlayerTab:AddButton({
-    Title = "Teleport to Player",
-    Description = "Teleport to the selected player",
-    Callback = function()
-        TeleportToPlayer.TeleportTo(selectedPlayer)
-        Fluent:Notify({
-            Title = "Teleport",
-            Content = "Teleported to " .. selectedPlayer,
-            Duration = 2 -- Set to nil to make the notification not disappear
-        })
-    end
-})
-
---======================
--- Add Buttons for auto sell Tab
---======================
-autoSellTab:AddButton({
-    Title = "Sell All Items",
-    SubTitle = "Sell Anywhere",
-    Callback = function()
-        -- Call the function from the module
-        autosellmodule.sellAllItems()
-        Fluent:Notify({
-            Title = "Sell Anywhere",
-            Content = "All items sold!",
-            Duration = 2 -- Set to nil to make the notification not disappear
-        })
-    end
-})
-
-autoSellTab:AddToggle("AutoSellToggle", {
-    Title = "💰 Auto Sell",
-    Description = "Automatically sells all items at the specified interval.",
-    Default = false
-}):OnChanged(function(val)
-    autosellmodule.autoSellEnabled = val
-    if val then
-        print("✅ Auto Sell ENABLED")
-        Fluent:Notify({
-            Title = "Auto Sell",
-            Content = "Auto Sell ENABLED",
-            Duration = 2 -- Set to nil to make the notification not disappear
-        })
-        task.spawn(function()
-            while autosellmodule.autoSellEnabled do
-                autosellmodule.sellAllItems()
-                task.wait(autosellmodule.sellDelayMinutes * 60)  -- convert minutes to seconds
-            end
-        end)
-    else
-        print("❌ Auto Sell DISABLED")
-    end
-end)
-
--- Slider to adjust delay in minutes
-autoSellTab:AddSlider("SellDelaySlider", {
-    Title = "⏱ Sell Delay (Minutes)",
-    Description = "Set how often items are sold automatically.",
-    Default = 1,
-    Min = 0.5,
-    Max = 30,
-    Rounding = 1
-}):OnChanged(function(val)
-    autosellmodule.sellDelayMinutes = val
-    print("🔧 Auto Sell delay set to " .. autosellmodule.sellDelayMinutes .. " minute(s)")
-    Fluent:Notify({
-        Title = "Auto Sell Delay",
-        Content = "Delay set to " .. val .. " minute(s)",
-        Duration = 2 -- Set to nil to make the notification not disappear
+--========================
+-- Auto Sell Tab
+--========================
+do
+    AutoSellTab:AddButton({
+        Title = "Sell All Items",
+        SubTitle = "Sell Anywhere",
+        Callback = function()
+            autosellmodule.sellAllItems()
+            Notify("Sell Anywhere", "All items sold!", 2)
+        end
     })
-end)
 
---======================
--- Add Buttons for Weather Tab
---======================
+    local autoSellToggle = AutoSellTab:AddToggle("AutoSellToggle", {
+        Title = "💰 Auto Sell",
+        Description = "Automatically sells all items at the specified interval.",
+        Default = false
+    })
 
-WeatherTab:AddButton({
-    Title = "Buy Storm Weather",
-    Callback = function()
-        -- Call the function from the module
-        PurchaseWeather.BuyStorm()
-        Fluent:Notify({
-            Title = "Weather Purchased",
-            Content = "Storm weather purchased!",
-            Duration = 2 -- Set to nil to make the notification not disappear
-        })
-    end
-})
+    autoSellToggle:OnChanged(function(val)
+        autosellmodule.autoSellEnabled = val
+        Notify("Auto Sell", val and "Auto Sell ENABLED" or "Auto Sell DISABLED", 2)
+        if val then
+            task.spawn(function()
+                while autosellmodule.autoSellEnabled do
+                    autosellmodule.sellAllItems()
+                    task.wait(autosellmodule.sellDelayMinutes * 60)
+                end
+            end)
+        end
+    end)
+    Options.AutoSellToggle:SetValue(false)
 
---======================
--- Add Buttons for Extra Tab
---======================
+    AutoSellTab:AddSlider("SellDelaySlider", {
+        Title = "⏱ Sell Delay (Minutes)",
+        Description = "Set how often items are sold automatically.",
+        Default = 1,
+        Min = 0.5,
+        Max = 30,
+        Rounding = 1,
+        Callback = function(val)
+            autosellmodule.sellDelayMinutes = val
+            Notify("Auto Sell Delay", "Delay set to " .. val .. " minute(s)", 2)
+        end
+    })
+end
 
-ExtraTab:AddToggle("AntiAFKToggle", {
-    Title = "🛡️ Anti-AFK",
-    Description = "Prevents being disconnected due to inactivity",
-    Default = false
-}):OnChanged(function(val)
-    if val then
-        antiafkmodule.start()
-        print("🛡️ Anti-AFK ENABLED")
-        Fluent:Notify({
-            Title = "🛡️ Anti-AFK",
-            Content = "Anti-AFK ENABLED",
-            Duration = 2 -- Set to nil to make the notification not disappear
-        })
-    else
-        antiafkmodule.stop()
-        print("🛡️ Anti-AFK DISABLED")
-        Fluent:Notify({
-            Title = "🛡️ Anti-AFK",
-            Content = "Anti-AFK DISABLED",
-            Duration = 2 -- Set to nil to make the notification not disappear
-        })
-    end
-end)
+--========================
+-- Weather Tab
+--========================
+do
+    WeatherTab:AddButton({
+        Title = "Buy Storm Weather",
+        Callback = function()
+            PurchaseWeather.BuyStorm()
+            Notify("Weather Purchased", "Storm weather purchased!", 2)
+        end
+    })
+end
 
--- Example: if you want to add more weather later
--- WeatherTab:AddButton({
---     Title = "Buy Snow Weather",
---     Callback = function()
---         PurchaseWeather.BuySnow()
---     end
--- })
-    Fluent:Notify({
-        Title = "Notification",
-        Content = "The Script has loaded successfully!",
-        Duration = 3 -- Set to nil to make the notification not disappear
-    })     
+--========================
+-- Extra Tab
+--========================
+do
+    local antiAFK = ExtraTab:AddToggle("AntiAFKToggle", {
+        Title = "🛡️ Anti-AFK",
+        Description = "Prevents being disconnected due to inactivity",
+        Default = false
+    })
+
+    antiAFK:OnChanged(function(val)
+        if val then
+            antiafkmodule.start()
+        else
+            antiafkmodule.stop()
+        end
+        Notify("🛡️ Anti-AFK", val and "Anti-AFK ENABLED" or "Anti-AFK DISABLED", 2)
+    end)
+end
+
+--========================
+-- Final Notification
+--========================
+Notify("Notification", "The Script has loaded successfully!", 3)
