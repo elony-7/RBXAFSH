@@ -27,7 +27,6 @@ local WeatherTab = Window:AddTab({
 --======================
 -- Load PurchaseWeather module
 --======================
-local PurchaseWeather = loadstring(weather)()
 --======================
 -- Add Buttons for Weather
 --======================
