@@ -18,7 +18,7 @@ end
 -- Safe WaitForChild with timeout
 local function WaitForChildRecursive(parent, childName, timeout)
     local obj
-    local success, err = pcall(function()
+    local success = pcall(function()
         obj = parent:WaitForChild(childName, timeout)
     end)
     return success and obj or nil
@@ -52,35 +52,31 @@ function AutoReel.Start()
         log("✅ Net folder found")
 
         -- Wait for RemoteEvents
-        local startRE, completedRE
-        repeat
-            local reFolder = netFolder:FindFirstChild("RE")
-            startRE = reFolder and reFolder:FindFirstChild("RequestFishingMinigameStarted")
-            completedRE = reFolder and reFolder:FindFirstChild("FishingCompleted")
-            if not startRE or not completedRE then
-                log("⚠️ RemoteEvents not found, retrying...")
-                task.wait(1)
-            end
-        until startRE and completedRE
+        local reFolder = netFolder:WaitForChild("RE")
+        local minigameRE = reFolder:WaitForChild("FishingMinigameChanged")
+        local completedRE = reFolder:WaitForChild("FishingCompleted")
 
         log("✅ RemoteEvents found, listening for minigame events...")
 
-        -- Connect to minigame start event
-        connections["_autoreel"] = startRE.OnClientEvent:Connect(function(...)
+        -- Connect to minigame state changes
+        connections["_autoreel"] = minigameRE.OnClientEvent:Connect(function(state, ...)
             if AutoReel.Enabled then
-                log("🎣 Fishing minigame detected! Auto-reeling...")
+                -- Check if the minigame is in "reeling" state (usually state == "Started" or similar)
+                if state == "Started" or state == "Reeling" then
+                    log("🎣 Reeling detected! Sending auto-complete...")
 
-                -- Optional: small delay to mimic human reaction
-                task.wait(0.1)
+                    -- Optional delay to simulate human reaction
+                    task.wait(0.1)
 
-                -- Fire the completion event
-                if completedRE then
-                    pcall(function()
-                        completedRE:FireServer()
-                    end)
-                    log("✅ Auto-reel sent!")
-                else
-                    log("❌ Completed RemoteEvent not found!")
+                    -- Fire completion
+                    if completedRE then
+                        pcall(function()
+                            completedRE:FireServer()
+                        end)
+                        log("✅ Auto-reel sent!")
+                    else
+                        log("❌ Completed RemoteEvent not found!")
+                    end
                 end
             end
         end)
