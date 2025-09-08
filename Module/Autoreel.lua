@@ -59,10 +59,10 @@ function AutoReel.Start()
                     pcall(function()
                         completedRE:FireServer()
                     end)
-                    log("Fired FishingCompleted")
+                    print("Fired FishingCompleted")
                     task.wait(0.00) -- 5ms delay
                 end
-                log("Finished firing FishingCompleted")
+                print("Finished firing FishingCompleted")
 
                 -- disconnect after firing once for this cycle
                 if conn then
