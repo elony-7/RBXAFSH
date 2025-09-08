@@ -55,29 +55,23 @@ function AutoReel.Start()
         log("✅ Listening for RE/PlayFishingEffect...")
 
         -- Step 1: when PlayFishingEffect fires
-        connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerDisplayName, partName, quality)
+        connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerName, partName, quality)
             if not AutoReel.Enabled then return end
 
-            -- ✅ Only continue if the event is for you
-            if playerDisplayName and tostring(playerDisplayName) ~= LocalPlayer.DisplayName then
-                log(("⏩ Ignored PlayFishingEffect from %s"):format(tostring(playerDisplayName)))
-                return
-            end
-
             log(("🎣 PlayFishingEffect: %s, %s, quality=%s"):format(
-                tostring(playerDisplayName),
+                tostring(playerName),
                 tostring(partName),
                 tostring(quality)
             ))
 
             -- Step 2: wait for ReplicateTextEffect before sending FishingCompleted
             local conn
-            conn = textEffectRE.OnClientEvent:Connect(function(textPlayerDisplayName, ...)
+            conn = textEffectRE.OnClientEvent:Connect(function(textPlayerName, ...)
                 if not AutoReel.Enabled then return end
 
-                -- ✅ Only continue if the event is for you
-                if textPlayerDisplayName and tostring(textPlayerDisplayName) ~= LocalPlayer.DisplayName then
-                    log(("⏩ Ignored ReplicateTextEffect from %s"):format(tostring(textPlayerDisplayName)))
+                -- ✅ Filter: ignore if not mine
+                if textPlayerName and tostring(textPlayerName) ~= "" and tostring(textPlayerName) ~= LocalPlayer.Name then
+                    log(("⏩ Ignored ReplicateTextEffect from %s"):format(tostring(textPlayerName)))
                     return
                 end
 
@@ -109,4 +103,10 @@ function AutoReel.Stop()
     for name, conn in pairs(connections) do
         if conn.Disconnect then
             conn:Disconnect()
-        e
+        end
+        connections[name] = nil
+    end
+    log("⏹ AutoReel stopped")
+end
+
+return AutoReel
