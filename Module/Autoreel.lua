@@ -71,7 +71,7 @@ function AutoReel.Start()
 
                 log("💡 ReplicateTextEffect received, conditions met — finishing reel...")
                 
-                log("💡 Waited 1 sec")
+            
                 local start = tick()
                     while AutoReel.Enabled and (tick() - start < 3) do
                         pcall(function()
