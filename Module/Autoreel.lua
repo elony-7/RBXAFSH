@@ -41,15 +41,9 @@ function AutoReel.Start()
             return
         end
 
-        local reFolder = netFolder:FindFirstChild("RE")
-        if not reFolder then
-            log("❌ Could not find RE folder in net")
-            AutoReel.Enabled = false
-            return
-        end
-
-        local playEffectRE = reFolder:FindFirstChild("PlayFishingEffect")
-        local completedRE = reFolder:FindFirstChild("FishingCompleted")
+        -- Grab events directly
+        local playEffectRE = netFolder:FindFirstChild("RE/PlayFishingEffect")
+        local completedRE = netFolder:FindFirstChild("RE/FishingCompleted")
 
         if not playEffectRE or not completedRE then
             log("❌ Missing required RemoteEvents (PlayFishingEffect / FishingCompleted)")
@@ -57,13 +51,17 @@ function AutoReel.Start()
             return
         end
 
-        log("✅ Listening for PlayFishingEffect...")
+        log("✅ Listening for RE/PlayFishingEffect...")
 
         -- When PlayFishingEffect fires, we spoof "perfect" and auto-complete
         connections["_autoreel"] = playEffectRE.OnClientEvent:Connect(function(playerName, partName, quality)
             if not AutoReel.Enabled then return end
 
-            log(("🎣 PlayFishingEffect: %s, %s, quality=%s"):format(tostring(playerName), tostring(partName), tostring(quality)))
+            log(("🎣 PlayFishingEffect: %s, %s, quality=%s"):format(
+                tostring(playerName),
+                tostring(partName),
+                tostring(quality)
+            ))
 
             -- Wait a tiny bit to mimic human timing
             task.wait(0.2)
@@ -73,7 +71,7 @@ function AutoReel.Start()
                 completedRE:FireServer()
             end)
 
-            log("✅ AutoReel: Sent FishingCompleted (auto-finished reeling)")
+            log("✅ AutoReel: Sent RE/FishingCompleted (auto-finished reeling)")
         end)
     end)
 end
