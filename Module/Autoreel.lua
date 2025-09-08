@@ -43,18 +43,19 @@ function AutoReel.Start()
 
         -- Grab events directly
         local playEffectRE = netFolder:FindFirstChild("RE/PlayFishingEffect")
+        local textEffectRE = netFolder:FindFirstChild("RE/ReplicateTextEffect")
         local completedRE = netFolder:FindFirstChild("RE/FishingCompleted")
 
-        if not playEffectRE or not completedRE then
-            log("❌ Missing required RemoteEvents (PlayFishingEffect / FishingCompleted)")
+        if not playEffectRE or not textEffectRE or not completedRE then
+            log("❌ Missing required RemoteEvents (PlayFishingEffect / ReplicateTextEffect / FishingCompleted)")
             AutoReel.Enabled = false
             return
         end
 
         log("✅ Listening for RE/PlayFishingEffect...")
 
-        -- When PlayFishingEffect fires, we spoof "perfect" and auto-complete
-        connections["_autoreel"] = playEffectRE.OnClientEvent:Connect(function(playerName, partName, quality)
+        -- Step 1: when PlayFishingEffect fires
+        connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerName, partName, quality)
             if not AutoReel.Enabled then return end
 
             log(("🎣 PlayFishingEffect: %s, %s, quality=%s"):format(
@@ -63,15 +64,28 @@ function AutoReel.Start()
                 tostring(quality)
             ))
 
-            -- Wait a tiny bit to mimic human timing
-            task.wait(0.2)
+            -- Step 2: wait for ReplicateTextEffect before sending FishingCompleted
+            local conn
+            conn = textEffectRE.OnClientEvent:Connect(function(...)
+                if not AutoReel.Enabled then return end
 
-            -- Fire FishingCompleted to end the minigame instantly
-            pcall(function()
-                completedRE:FireServer()
+                log("💡 ReplicateTextEffect received, conditions met — finishing reel...")
+
+                -- tiny delay to mimic human timing
+                task.wait(0.25)
+
+                pcall(function()
+                    completedRE:FireServer()
+                end)
+
+                log("✅ AutoReel: Sent RE/FishingCompleted")
+
+                -- disconnect after firing once for this cycle
+                if conn then
+                    conn:Disconnect()
+                    conn = nil
+                end
             end)
-
-            log("✅ AutoReel: Sent RE/FishingCompleted (auto-finished reeling)")
         end)
     end)
 end
