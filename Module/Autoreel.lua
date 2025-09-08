@@ -3,6 +3,7 @@ local AutoReel = {}
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
 
 -- Flag to track status
 AutoReel.Enabled = false
@@ -60,23 +61,31 @@ function AutoReel.Start()
 
         -- Connect to minigame state changes
         connections["_autoreel"] = minigameRE.OnClientEvent:Connect(function(state, ...)
-            if AutoReel.Enabled then
-                -- Check if the minigame is in "reeling" state (usually state == "Started" or similar)
-                if state == "Started" or state == "Reeling" then
-                    log("🎣 Reeling detected! Sending auto-complete...")
+            if not AutoReel.Enabled then return end
 
-                    -- Optional delay to simulate human reaction
-                    task.wait(0.1)
+            log("Minigame state:", state, ...)
 
-                    -- Fire completion
-                    if completedRE then
-                        pcall(function()
-                            completedRE:FireServer()
-                        end)
-                        log("✅ Auto-reel sent!")
-                    else
-                        log("❌ Completed RemoteEvent not found!")
-                    end
+            -- Start auto-reeling when minigame is in "reeling" state
+            if state == "Started" or state == "Reeling" then
+                log("🎣 Reeling detected! Auto-reeling...")
+
+                -- Spawn a loop to continuously fire FishingCompleted while reeling
+                if not connections["_reelLoop"] then
+                    connections["_reelLoop"] = RunService.RenderStepped:Connect(function()
+                        if AutoReel.Enabled and completedRE then
+                            pcall(function()
+                                completedRE:FireServer()
+                            end)
+                        end
+                    end)
+                end
+
+            -- Stop auto-reel when minigame ends
+            elseif state == "Ended" or state == "Stopped" then
+                if connections["_reelLoop"] then
+                    connections["_reelLoop"]:Disconnect()
+                    connections["_reelLoop"] = nil
+                    log("⏹ Minigame ended, auto-reel stopped.")
                 end
             end
         end)
@@ -90,7 +99,11 @@ function AutoReel.Stop()
         connections["_autoreel"]:Disconnect()
         connections["_autoreel"] = nil
     end
-    log("⏹ AutoReel stopped.")
+    if connections["_reelLoop"] then
+        connections["_reelLoop"]:Disconnect()
+        connections["_reelLoop"] = nil
+    end
+    log("⏹ AutoReel fully stopped.")
 end
 
 return AutoReel
