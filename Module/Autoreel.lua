@@ -7,7 +7,7 @@ local LocalPlayer = Players.LocalPlayer
 -- Flag to track status
 AutoReel.Enabled = false
 
--- Connections table
+-- Connections table for cleanup
 local connections = {}
 
 -- Helper function for debugging
@@ -15,17 +15,13 @@ local function log(msg)
     print("[AutoReel] " .. msg)
 end
 
--- Function to safely wait for a child with optional timeout
+-- Safe WaitForChild with timeout
 local function WaitForChildRecursive(parent, childName, timeout)
     local obj
     local success, err = pcall(function()
         obj = parent:WaitForChild(childName, timeout)
     end)
-    if success then
-        return obj
-    else
-        return nil
-    end
+    return success and obj or nil
 end
 
 -- Main function to start listening for minigame events
@@ -40,7 +36,7 @@ function AutoReel.Start()
         -- Wait for character
         local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-        -- Wait for netFolder
+        -- Wait for net folder
         local netFolder
         repeat
             local packages = WaitForChildRecursive(ReplicatedStorage, "Packages", 5)
@@ -62,8 +58,8 @@ function AutoReel.Start()
             startRE = reFolder and reFolder:FindFirstChild("RequestFishingMinigameStarted")
             completedRE = reFolder and reFolder:FindFirstChild("FishingCompleted")
             if not startRE or not completedRE then
-                
-                task.wait(0)
+                log("⚠️ RemoteEvents not found, retrying...")
+                task.wait(1)
             end
         until startRE and completedRE
 
@@ -74,11 +70,18 @@ function AutoReel.Start()
             if AutoReel.Enabled then
                 log("🎣 Fishing minigame detected! Auto-reeling...")
 
+                -- Optional: small delay to mimic human reaction
+                task.wait(0.1)
+
                 -- Fire the completion event
-                pcall(function()
-                    completedRE:FireServer()
-                end)
-                log("✅ Auto-reel sent!")
+                if completedRE then
+                    pcall(function()
+                        completedRE:FireServer()
+                    end)
+                    log("✅ Auto-reel sent!")
+                else
+                    log("❌ Completed RemoteEvent not found!")
+                end
             end
         end)
     end)
