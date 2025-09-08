@@ -59,7 +59,7 @@ function AutoReel.Start()
             if not AutoReel.Enabled then return end
 
             -- ✅ Only continue if this event is for your DisplayName
-            if playerDisplayName ~= LocalPlayer.DisplayName then
+            if tostring(playerDisplayName) ~= tostring(LocalPlayer.DisplayName) then
                 log(("⏩ Ignored PlayFishingEffect from %s"):format(tostring(playerDisplayName)))
                 return
             end
@@ -76,7 +76,7 @@ function AutoReel.Start()
                 if not AutoReel.Enabled then return end
 
                 -- ✅ Only continue if this event is for your DisplayName
-                if textPlayerDisplayName ~= LocalPlayer.DisplayName then
+                if tostring(textPlayerDisplayName) ~= tostring(LocalPlayer.DisplayName) then
                     log(("⏩ Ignored ReplicateTextEffect from %s"):format(tostring(textPlayerDisplayName)))
                     return
                 end
