@@ -12,8 +12,8 @@ AutoReel.Enabled = false
 local connections = {}
 
 -- Helper function for debugging
-local function log(msg)
-    print("[AutoReel] " .. msg)
+local function log(msg, ...)
+    print("[AutoReel] " .. msg, ...)
 end
 
 -- Safe WaitForChild with timeout
@@ -23,23 +23,6 @@ local function WaitForChildRecursive(parent, childName, timeout)
         obj = parent:WaitForChild(childName, timeout)
     end)
     return success and obj or nil
-end
-
--- Safe polling for RE folder
-local function WaitForREFolder(netFolder, retryDelay, maxRetries)
-    retryDelay = retryDelay or 0.5
-    maxRetries = maxRetries or 20 -- total 10 seconds by default
-    local retries = 0
-    local reFolder
-    while retries < maxRetries do
-        reFolder = netFolder:FindFirstChild("RE")
-        if reFolder then
-            return reFolder
-        end
-        task.wait(retryDelay)
-        retries = retries + 1
-    end
-    return nil
 end
 
 -- Main function to start listening for minigame events
@@ -69,21 +52,17 @@ function AutoReel.Start()
 
         log("✅ Net folder found")
 
-        -- Wait for RemoteEvents safely
-        local reFolder = WaitForREFolder(netFolder, 0.5, 20)
-        if not reFolder then
-            log("❌ RE folder not found after timeout")
-            AutoReel.Enabled = false
-            return
-        end
+        -- Wait for RemoteEvents directly (no 'RE' folder!)
+        local minigameRE, completedRE
+        repeat
+            minigameRE = netFolder:FindFirstChild("RE/FishingMinigameChanged")
+            completedRE = netFolder:FindFirstChild("RE/FishingCompleted")
 
-        local minigameRE = reFolder:FindFirstChild("FishingMinigameChanged")
-        local completedRE = reFolder:FindFirstChild("FishingCompleted")
-        if not minigameRE or not completedRE then
-            log("❌ Required RemoteEvents not found!")
-            AutoReel.Enabled = false
-            return
-        end
+            if not (minigameRE and completedRE) then
+                log("⚠️ Fishing remotes not found, retrying...")
+                task.wait(1)
+            end
+        until minigameRE and completedRE
 
         log("✅ RemoteEvents found, listening for minigame events...")
 
@@ -93,7 +72,7 @@ function AutoReel.Start()
 
             log("Minigame state:", state, ...)
 
-            -- Start auto-reeling when minigame is in "reeling" state
+            -- Start auto-reeling when minigame is in "Started" or "Reeling"
             if state == "Started" or state == "Reeling" then
                 log("🎣 Reeling detected! Auto-reeling...")
 
