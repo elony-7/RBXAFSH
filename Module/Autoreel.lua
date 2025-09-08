@@ -3,29 +3,25 @@ local AutoReel = {}
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
 
--- Flag to track status
+-- Flags
 AutoReel.Enabled = false
-
--- Connections table for cleanup
 local connections = {}
 
--- Helper function for debugging
-local function log(msg, ...)
-    print("[AutoReel] " .. msg, ...)
+local function log(msg)
+    print("[AutoReel] " .. msg)
 end
 
--- Safe WaitForChild with timeout
-local function WaitForChildRecursive(parent, childName, timeout)
-    local obj
-    local success = pcall(function()
-        obj = parent:WaitForChild(childName, timeout)
-    end)
-    return success and obj or nil
+-- Utility to wait for objects safely
+local function WaitForPath(root, pathArray, timeout)
+    local current = root
+    for _, name in ipairs(pathArray) do
+        current = current:WaitForChild(name, timeout or 5)
+        if not current then return nil end
+    end
+    return current
 end
 
--- Main function to start listening for minigame events
 function AutoReel.Start()
     if AutoReel.Enabled then
         log("⚠️ AutoReel already running")
@@ -34,83 +30,63 @@ function AutoReel.Start()
     AutoReel.Enabled = true
 
     task.spawn(function()
-        -- Wait for character
-        local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        -- Path into net folder
+        local netFolder = WaitForPath(ReplicatedStorage, {
+            "Packages", "_Index", "sleitnick_net@0.2.0", "net"
+        }, 10)
 
-        -- Wait for net folder
-        local netFolder
-        repeat
-            local packages = WaitForChildRecursive(ReplicatedStorage, "Packages", 5)
-            local index = packages and WaitForChildRecursive(packages, "_Index", 5)
-            local sleitnick = index and WaitForChildRecursive(index, "sleitnick_net@0.2.0", 5)
-            netFolder = sleitnick and sleitnick:FindFirstChild("net")
-            if not netFolder then
-                log("⚠️ Net folder not found, retrying...")
-                task.wait(1)
-            end
-        until netFolder
+        if not netFolder then
+            log("❌ Could not find net folder")
+            AutoReel.Enabled = false
+            return
+        end
 
-        log("✅ Net folder found")
+        local reFolder = netFolder:FindFirstChild("RE")
+        if not reFolder then
+            log("❌ Could not find RE folder in net")
+            AutoReel.Enabled = false
+            return
+        end
 
-        -- Wait for RemoteEvents directly (no 'RE' folder!)
-        local minigameRE, completedRE
-        repeat
-            minigameRE = netFolder:FindFirstChild("RE/FishingMinigameChanged")
-            completedRE = netFolder:FindFirstChild("RE/FishingCompleted")
+        local playEffectRE = reFolder:FindFirstChild("PlayFishingEffect")
+        local completedRE = reFolder:FindFirstChild("FishingCompleted")
 
-            if not (minigameRE and completedRE) then
-                log("⚠️ Fishing remotes not found, retrying...")
-                task.wait(1)
-            end
-        until minigameRE and completedRE
+        if not playEffectRE or not completedRE then
+            log("❌ Missing required RemoteEvents (PlayFishingEffect / FishingCompleted)")
+            AutoReel.Enabled = false
+            return
+        end
 
-        log("✅ RemoteEvents found, listening for minigame events...")
+        log("✅ Listening for PlayFishingEffect...")
 
-        -- Connect to minigame state changes
-        connections["_autoreel"] = minigameRE.OnClientEvent:Connect(function(state, ...)
+        -- When PlayFishingEffect fires, we spoof "perfect" and auto-complete
+        connections["_autoreel"] = playEffectRE.OnClientEvent:Connect(function(playerName, partName, quality)
             if not AutoReel.Enabled then return end
 
-            log("Minigame state:", state, ...)
+            log(("🎣 PlayFishingEffect: %s, %s, quality=%s"):format(tostring(playerName), tostring(partName), tostring(quality)))
 
-            -- Start auto-reeling when minigame is in "Started" or "Reeling"
-            if state == "Started" or state == "Reeling" then
-                log("🎣 Reeling detected! Auto-reeling...")
+            -- Wait a tiny bit to mimic human timing
+            task.wait(0.2)
 
-                -- Spawn a loop to continuously fire FishingCompleted while reeling
-                if not connections["_reelLoop"] then
-                    connections["_reelLoop"] = RunService.RenderStepped:Connect(function()
-                        if AutoReel.Enabled and completedRE then
-                            pcall(function()
-                                completedRE:FireServer()
-                            end)
-                        end
-                    end)
-                end
+            -- Fire FishingCompleted to end the minigame instantly
+            pcall(function()
+                completedRE:FireServer()
+            end)
 
-            -- Stop auto-reel when minigame ends
-            elseif state == "Ended" or state == "Stopped" then
-                if connections["_reelLoop"] then
-                    connections["_reelLoop"]:Disconnect()
-                    connections["_reelLoop"] = nil
-                    log("⏹ Minigame ended, auto-reel stopped.")
-                end
-            end
+            log("✅ AutoReel: Sent FishingCompleted (auto-finished reeling)")
         end)
     end)
 end
 
--- Stop function
 function AutoReel.Stop()
     AutoReel.Enabled = false
-    if connections["_autoreel"] then
-        connections["_autoreel"]:Disconnect()
-        connections["_autoreel"] = nil
+    for name, conn in pairs(connections) do
+        if conn.Disconnect then
+            conn:Disconnect()
+        end
+        connections[name] = nil
     end
-    if connections["_reelLoop"] then
-        connections["_reelLoop"]:Disconnect()
-        connections["_reelLoop"] = nil
-    end
-    log("⏹ AutoReel fully stopped.")
+    log("⏹ AutoReel stopped")
 end
 
 return AutoReel
