@@ -21,26 +21,7 @@ end
 -- Unlimited Jump toggle function
 function PlayerModule.SetUnlimitedJump(val)
     PlayerModule.UnlimitedJumpEnabled = val
-    print("♾️ Unlimited Jump " .. (val and "ENABLED" or "DISABLED"))
-
-    if val then
-        if not connections["_jump"] then
-            local lastJump = 0
-            connections["_jump"] = UserInputService.JumpRequest:Connect(function()
-                local char = LocalPlayer.Character
-                local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-                if humanoid and tick() - lastJump > 0.1 then
-                    lastJump = tick()
-                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-            end)
-        end
-    else
-        if connections["_jump"] then
-            connections["_jump"]:Disconnect()
-            connections["_jump"] = nil
-        end
-    end
+    log("♾️ Unlimited Jump " .. (val and "ENABLED" or "DISABLED"))
 end
 
 -- NoClip toggle function
@@ -66,6 +47,16 @@ function PlayerModule.SetNoClip(val)
         end
     end
 end
+
+-- Hook JumpRequest for Unlimited Jump
+UserInputService.JumpRequest:Connect(function()
+    if PlayerModule.UnlimitedJumpEnabled then
+        local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
 
 
 return PlayerModule
