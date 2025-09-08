@@ -72,7 +72,7 @@ function AutoReel.Start()
                 log("💡 ReplicateTextEffect received, conditions met — finishing reel...")
 
                 -- tiny delay to mimic human timing
-                task.wait(1)
+                task.wait(2)
 
                 pcall(function()
                     completedRE:FireServer()
