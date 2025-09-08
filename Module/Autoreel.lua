@@ -62,8 +62,8 @@ function AutoReel.Start()
             startRE = reFolder and reFolder:FindFirstChild("RequestFishingMinigameStarted")
             completedRE = reFolder and reFolder:FindFirstChild("FishingCompleted")
             if not startRE or not completedRE then
-                log("⚠️ RemoteEvents not found, retrying...")
-                task.wait(1)
+                
+                task.wait(0)
             end
         until startRE and completedRE
 
