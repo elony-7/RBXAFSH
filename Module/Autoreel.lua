@@ -55,23 +55,29 @@ function AutoReel.Start()
         log("✅ Listening for RE/PlayFishingEffect...")
 
         -- Step 1: when PlayFishingEffect fires
-        connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerName, partName, quality)
+        connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerDisplayName, partName, quality)
             if not AutoReel.Enabled then return end
 
-            log(("🎣 PlayFishingEffect: %s, %s, quality=%s"):format(
-                tostring(playerName),
+            -- ✅ Only continue if this event is for your DisplayName
+            if playerDisplayName ~= LocalPlayer.DisplayName then
+                log(("⏩ Ignored PlayFishingEffect from %s"):format(tostring(playerDisplayName)))
+                return
+            end
+
+            log(("🎣 PlayFishingEffect (for me): %s, %s, quality=%s"):format(
+                tostring(playerDisplayName),
                 tostring(partName),
                 tostring(quality)
             ))
 
             -- Step 2: wait for ReplicateTextEffect before sending FishingCompleted
             local conn
-            conn = textEffectRE.OnClientEvent:Connect(function(textPlayerName, ...)
+            conn = textEffectRE.OnClientEvent:Connect(function(textPlayerDisplayName, ...)
                 if not AutoReel.Enabled then return end
 
-                -- ✅ Filter: ignore if not mine
-                if textPlayerName and tostring(textPlayerName) ~= "" and tostring(textPlayerName) ~= LocalPlayer.Name then
-                    log(("⏩ Ignored ReplicateTextEffect from %s"):format(tostring(textPlayerName)))
+                -- ✅ Only continue if this event is for your DisplayName
+                if textPlayerDisplayName ~= LocalPlayer.DisplayName then
+                    log(("⏩ Ignored ReplicateTextEffect from %s"):format(tostring(textPlayerDisplayName)))
                     return
                 end
 
