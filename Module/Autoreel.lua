@@ -58,11 +58,6 @@ function AutoReel.Start()
         connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerName, partName, quality)
             if not AutoReel.Enabled then return end
 
-            -- ✅ Only continue if this is *my* event
-            if playerName and tostring(playerName) ~= "" and tostring(playerName) ~= LocalPlayer.Name then
-                return
-            end
-
             log(("🎣 PlayFishingEffect: %s, %s, quality=%s"):format(
                 tostring(playerName),
                 tostring(partName),
@@ -78,14 +73,14 @@ function AutoReel.Start()
                 
                 log("💡 Waited 1 sec")
                 local start = tick()
-                while AutoReel.Enabled and (tick() - start < 3) do
-                    pcall(function()
-                        completedRE:FireServer()
-                    end)
-                    log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
-                    task.wait(0.00) -- 5ms delay
-                end
-                log("✅ AutoReel: DONE")
+                    while AutoReel.Enabled and (tick() - start < 3) do
+                        pcall(function()
+                            completedRE:FireServer()
+                        end)
+                        log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
+                        task.wait(0.00) -- 5ms delay
+                    end
+                    log("✅ AutoReel: DONE")
                 -- disconnect after firing once for this cycle
                 if conn then
                     conn:Disconnect()
