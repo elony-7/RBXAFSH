@@ -15,7 +15,10 @@ TeleportModule.Locations = {
     ["Kohana Volcano"] = Vector3.new(-493.7, 20.8, 214.2),
     ["Tropical Island"] = Vector3.new(-2074.0, 53.5, 3767.4),
     ["Kohana Island"] = Vector3.new(-631.3, 16.0, 613.4),
-    ["Winter Island"] = Vector3.new(1685.6, 10.2, 3397.6)
+    ["Winter Island"] = Vector3.new(1685.6, 10.2, 3397.6),
+    ["Safe Spot Crater"] = Vector3.new(1131.5, 30.2, 4866.5),
+    ["Safe Spot Fisherman"] = Vector3.new(253.0, 69.1, 2924.5),
+    ["Safe Spot Small Islands"] = Vector3.new(994.7, 1.0, 5073.8)
 }
 print("Teleport Locations Added")
 
