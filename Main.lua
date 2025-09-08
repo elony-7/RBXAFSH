@@ -161,24 +161,25 @@ end
 --========================
 -- Player Tab
 --========================
---do -- Unlimited Jump Toggle
---    PlayerTab:AddToggle("UnlimitedJump", {
---        Title = "♾️ Unlimited Jump",
---        Description = "Allows jumping infinitely",
---        Default = false
---    }):OnChanged(function(val)
---        PlayerModule.SetUnlimitedJump(val)
---end)
+do -- Unlimited Jump Toggle
+    PlayerTab:AddToggle("UnlimitedJump", {
+        Title = "♾️ Unlimited Jump",
+        Description = "Allows jumping infinitely",
+        Default = false
+    }):OnChanged(function(val)
+        PlayerModule.SetUnlimitedJump(val)
+    end)
+end    
 
-  -- NoClip Toggle
-PlayerTab:AddToggle("NoClip", {
-    Title = "🚫 NoClip",
-    Description = "Makes character pass through walls",
-    Default = false
-        }):OnChanged(function(val)
+do  -- NoClip Toggle
+    PlayerTab:AddToggle("NoClip", {
+        Title = "🚫 NoClip",
+        Description = "Makes character pass through walls",
+        Default = false
+    }):OnChanged(function(val)
         PlayerModule.SetNoClip(val)
-end)
-
+    end)
+end
 
 --========================
 -- Auto Sell Tab
