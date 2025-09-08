@@ -67,14 +67,5 @@ function PlayerModule.SetNoClip(val)
     end
 end
 
--- Hook JumpRequest for Unlimited Jump
-UserInputService.JumpRequest:Connect(function()
-    if PlayerModule.UnlimitedJumpEnabled then
-        local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-    end
-end)
 
 return PlayerModule
