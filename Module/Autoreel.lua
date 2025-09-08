@@ -22,12 +22,30 @@ local function WaitForPath(root, pathArray, timeout)
     return current
 end
 
+-- Build DisplayName → Player map
+local function BuildDisplayNameMap()
+    local map = {}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        map[plr.DisplayName] = plr
+    end
+    return map
+end
+
 function AutoReel.Start()
     if AutoReel.Enabled then
         log("⚠️ AutoReel already running")
         return
     end
     AutoReel.Enabled = true
+
+    local displayNameMap = BuildDisplayNameMap()
+    -- Update map whenever a new player joins
+    Players.PlayerAdded:Connect(function(plr)
+        displayNameMap[plr.DisplayName] = plr
+    end)
+    Players.PlayerRemoving:Connect(function(plr)
+        displayNameMap[plr.DisplayName] = nil
+    end)
 
     task.spawn(function()
         -- Path into net folder
@@ -58,8 +76,8 @@ function AutoReel.Start()
         connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerDisplayName, partName, quality)
             if not AutoReel.Enabled then return end
 
-            -- ✅ Only continue if this event is for your DisplayName
-            if tostring(playerDisplayName) ~= tostring(LocalPlayer.DisplayName) then
+            local plr = displayNameMap[playerDisplayName]
+            if plr ~= LocalPlayer then
                 log(("⏩ Ignored PlayFishingEffect from %s"):format(tostring(playerDisplayName)))
                 return
             end
@@ -75,8 +93,8 @@ function AutoReel.Start()
             conn = textEffectRE.OnClientEvent:Connect(function(textPlayerDisplayName, ...)
                 if not AutoReel.Enabled then return end
 
-                -- ✅ Only continue if this event is for your DisplayName
-                if tostring(textPlayerDisplayName) ~= tostring(LocalPlayer.DisplayName) then
+                local plr2 = displayNameMap[textPlayerDisplayName]
+                if plr2 ~= LocalPlayer then
                     log(("⏩ Ignored ReplicateTextEffect from %s"):format(tostring(textPlayerDisplayName)))
                     return
                 end
