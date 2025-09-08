@@ -20,6 +20,7 @@ Notify("Notification", "Script is loading...", 5)
 -- Preload Modules
 --========================
 local AutoFishing = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Autofishing.lua"))()
+local AutoReel = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Autoreel.lua"))()
 local TeleportModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleport.lua"))()
 local TeleportToPlayer = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleporttoplayer.lua"))()
 local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PurchaseWeather.lua"))()
@@ -59,6 +60,8 @@ local Options = Fluent.Options
 --========================
 -- Farm Tab 
 --========================
+
+--=== Auto Fishing Toggle ===
 do
     FarmTab:AddToggle("AutoFishingPerfect", {
         Title = "🎣 Auto Fishing Perfect",
@@ -76,6 +79,26 @@ do
         end
     end)
 end
+
+--==== Auto Reel Toggle ====
+do
+    FarmTab:AddToggle("AutoReel", {
+        Title = "🎣 Auto Reel",
+        Description = "Automatically reels in the fish during the fishing minigame.",
+        Default = false
+    }):OnChanged(function(val)
+        if val then
+            AutoReel.Start()
+            print("✅ Auto Reel ENABLED")
+            Notify("✅ Auto Reel", "Auto Reel ENABLED", 2)
+        else
+            AutoReel.Stop()
+            print("❌ Auto Reel DISABLED")
+            Notify("❌ Auto Reel", "Auto Reel DISABLED", 2)
+        end
+    end)
+end
+
 --========================
 -- Teleport Tab (Dropdown)
 --========================
