@@ -72,12 +72,12 @@ function AutoReel.Start()
                 log("💡 ReplicateTextEffect received, conditions met — finishing reel...")
 
                 local start = tick()
-                    while AutoReel.Enabled and (tick() - start < 2) do
+                    while AutoReel.Enabled and (tick() - start < 1) do
                         pcall(function()
                             completedRE:FireServer()
                         end)
                         log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
-                        task.wait(0.02) -- 20ms delay
+                        task.wait(0.005) -- 5ms delay
                     end
 
                 -- disconnect after firing once for this cycle
