@@ -54,7 +54,7 @@ local AutoSellTab = Window:AddTab({Title = "Auto Sell", Icon = "shopping-cart"})
 local WeatherTab = Window:AddTab({Title = "Weather", Icon = "cloud-rain"})
 local ExtraTab = Window:AddTab({Title = "Extra", Icon = "settings"})
 
-local Options = Fluent.Options
+local Options = Fluent.Options 
 
 --========================
 -- Farm Tab 
