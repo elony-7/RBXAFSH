@@ -72,7 +72,7 @@ function AutoReel.Start()
                 log("💡 ReplicateTextEffect received, conditions met — finishing reel...")
 
                 local start = tick()
-                    while AutoReel.Enabled and (tick() - start < 1) do
+                    while AutoReel.Enabled and (tick() - start < 2.5) do
                         pcall(function()
                             completedRE:FireServer()
                         end)
