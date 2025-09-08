@@ -78,7 +78,7 @@ function AutoReel.Start()
                             completedRE:FireServer()
                         end)
                         log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
-                        task.wait(0.005) -- 5ms delay
+                        task.wait(0.001) -- 5ms delay
                     end
                     log("✅ AutoReel: DONE")
                 -- disconnect after firing once for this cycle
