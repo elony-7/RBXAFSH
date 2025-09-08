@@ -22,30 +22,12 @@ local function WaitForPath(root, pathArray, timeout)
     return current
 end
 
--- Build DisplayName → Player map
-local function BuildDisplayNameMap()
-    local map = {}
-    for _, plr in ipairs(Players:GetPlayers()) do
-        map[plr.DisplayName] = plr
-    end
-    return map
-end
-
 function AutoReel.Start()
     if AutoReel.Enabled then
         log("⚠️ AutoReel already running")
         return
     end
     AutoReel.Enabled = true
-
-    local displayNameMap = BuildDisplayNameMap()
-    -- Update map whenever a new player joins
-    Players.PlayerAdded:Connect(function(plr)
-        displayNameMap[plr.DisplayName] = plr
-    end)
-    Players.PlayerRemoving:Connect(function(plr)
-        displayNameMap[plr.DisplayName] = nil
-    end)
 
     task.spawn(function()
         -- Path into net folder
@@ -73,29 +55,23 @@ function AutoReel.Start()
         log("✅ Listening for RE/PlayFishingEffect...")
 
         -- Step 1: when PlayFishingEffect fires
-        connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerDisplayName, partName, quality)
+        connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerName, partName, quality)
             if not AutoReel.Enabled then return end
 
-            local plr = displayNameMap[playerDisplayName]
-            if plr ~= LocalPlayer then
-                log(("⏩ Ignored PlayFishingEffect from %s"):format(tostring(playerDisplayName)))
-                return
-            end
-
-            log(("🎣 PlayFishingEffect (for me): %s, %s, quality=%s"):format(
-                tostring(playerDisplayName),
+            log(("🎣 PlayFishingEffect: %s, %s, quality=%s"):format(
+                tostring(playerName),
                 tostring(partName),
                 tostring(quality)
             ))
 
             -- Step 2: wait for ReplicateTextEffect before sending FishingCompleted
             local conn
-            conn = textEffectRE.OnClientEvent:Connect(function(textPlayerDisplayName, ...)
+            conn = textEffectRE.OnClientEvent:Connect(function(textPlayerName, ...)
                 if not AutoReel.Enabled then return end
 
-                local plr2 = displayNameMap[textPlayerDisplayName]
-                if plr2 ~= LocalPlayer then
-                    log(("⏩ Ignored ReplicateTextEffect from %s"):format(tostring(textPlayerDisplayName)))
+                -- ✅ Filter: ignore if not mine
+                if textPlayerName and tostring(textPlayerName) ~= "" and tostring(textPlayerName) ~= LocalPlayer.Name then
+                    log(("⏩ Ignored ReplicateTextEffect from %s"):format(tostring(textPlayerName)))
                     return
                 end
 
