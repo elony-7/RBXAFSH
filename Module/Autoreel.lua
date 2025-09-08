@@ -22,6 +22,19 @@ local function WaitForPath(root, pathArray, timeout)
     return current
 end
 
+-- 🔁 Function to spam FishingCompleted every 3s
+local function SpamComplete(completedRE)
+    task.spawn(function()
+        while AutoReel.Enabled do
+            pcall(function()
+                completedRE:FireServer()
+            end)
+            log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
+            task.wait(3)
+        end
+    end)
+end
+
 function AutoReel.Start()
     if AutoReel.Enabled then
         log("⚠️ AutoReel already running")
@@ -54,7 +67,7 @@ function AutoReel.Start()
 
         log("✅ Listening for RE/PlayFishingEffect...")
 
-        -- Step 1: when PlayFishingEffect fires
+        -- When PlayFishingEffect fires, start spam loop
         connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerName, partName, quality)
             if not AutoReel.Enabled then return end
 
@@ -64,28 +77,7 @@ function AutoReel.Start()
                 tostring(quality)
             ))
 
-            -- Step 2: wait for ReplicateTextEffect before sending FishingCompleted
-            local conn
-            conn = textEffectRE.OnClientEvent:Connect(function(...)
-                if not AutoReel.Enabled then return end
-
-                log("💡 ReplicateTextEffect received, conditions met — finishing reel...")
-
-                -- tiny delay to mimic human timing
-                task.wait(1)
-
-                pcall(function()
-                    completedRE:FireServer()
-                end)
-
-                log("✅ AutoReel: Sent RE/FishingCompleted")
-
-                -- disconnect after firing once for this cycle
-                if conn then
-                    conn:Disconnect()
-                    conn = nil
-                end
-            end)
+            SpamComplete(completedRE) -- start spamming every 3s
         end)
     end)
 end
