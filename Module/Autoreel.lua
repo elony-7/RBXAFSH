@@ -57,6 +57,9 @@ function AutoReel.Start()
         -- Step 1: when PlayFishingEffect fires
         connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerName, partName, quality)
             if not AutoReel.Enabled then return end
+            if tostring(playerName) ~= LocalPlayer.Name then
+                return -- ignore other players
+            end
 
             log(("🎣 PlayFishingEffect: %s, %s, quality=%s"):format(
                 tostring(playerName),
@@ -66,21 +69,24 @@ function AutoReel.Start()
 
             -- Step 2: wait for ReplicateTextEffect before sending FishingCompleted
             local conn
-            conn = textEffectRE.OnClientEvent:Connect(function(...)
+            conn = textEffectRE.OnClientEvent:Connect(function(targetName, ...)
                 if not AutoReel.Enabled then return end
+                if tostring(targetName) ~= LocalPlayer.Name then
+                    return -- ignore if effect is for another player
+                end
 
                 log("💡 ReplicateTextEffect received, conditions met — finishing reel...")
-                
-            
+
                 local start = tick()
-                    while AutoReel.Enabled and (tick() - start < 3) do
-                        pcall(function()
-                            completedRE:FireServer()
-                        end)
-                        log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
-                        task.wait(0.00) -- 5ms delay
-                    end
-                    log("✅ AutoReel: DONE")
+                while AutoReel.Enabled and (tick() - start < 3) do
+                    pcall(function()
+                        completedRE:FireServer()
+                    end)
+                    log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
+                    task.wait(0.08) -- 80ms delay (instead of 0.00 to avoid flooding)
+                end
+                log("✅ AutoReel: DONE")
+
                 -- disconnect after firing once for this cycle
                 if conn then
                     conn:Disconnect()
