@@ -23,7 +23,7 @@ local AutoFishing = loadstring(game:HttpGet("https://raw.githubusercontent.com/e
 local TeleportModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleport.lua"))()
 local TeleportToPlayer = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleporttoplayer.lua"))()
 local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PurchaseWeather.lua"))()
-local PlayerModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PlayerModule.lua"))()
+--local PlayerModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PlayerModule.lua"))()
 local autosellmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main//Module/sellAllItems.lua"))()
 local antiafkmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Antiafk.lua"))()
 
@@ -161,24 +161,24 @@ end
 --========================
 -- Player Tab
 --========================
-do -- Unlimited Jump Toggle
-    PlayerTab:AddToggle("UnlimitedJump", {
-        Title = "♾️ Unlimited Jump",
-        Description = "Allows jumping infinitely",
-        Default = false
-    }):OnChanged(function(val)
-        PlayerModule.SetUnlimitedJump(val)
-end)
+--do -- Unlimited Jump Toggle
+--    PlayerTab:AddToggle("UnlimitedJump", {
+--        Title = "♾️ Unlimited Jump",
+--        Description = "Allows jumping infinitely",
+--        Default = false
+--    }):OnChanged(function(val)
+--        PlayerModule.SetUnlimitedJump(val)
+--end)
 
-do  -- NoClip Toggle
-    PlayerTab:AddToggle("NoClip", {
-        Title = "🚫 NoClip",
-        Description = "Makes character pass through walls",
-        Default = false
-    }):OnChanged(function(val)
-        PlayerModule.SetNoClip(val)
-    end)
-end
+--do  -- NoClip Toggle
+--    PlayerTab:AddToggle("NoClip", {
+--        Title = "🚫 NoClip",
+--        Description = "Makes character pass through walls",
+--        Default = false
+--    }):OnChanged(function(val)
+--        PlayerModule.SetNoClip(val)
+--    end)
+--end
 
 --========================
 -- Auto Sell Tab
