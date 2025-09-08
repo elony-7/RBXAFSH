@@ -22,20 +22,6 @@ local function WaitForPath(root, pathArray, timeout)
     return current
 end
 
--- 🔁 Function to spam FishingCompleted for 4s
-local function SpamComplete(completedRE)
-    task.spawn(function()
-        local start = tick()
-        while AutoReel.Enabled and (tick() - start < 4) do
-            pcall(function()
-                completedRE:FireServer()
-            end)
-            log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
-            task.wait(3)
-        end
-    end)
-end
-
 function AutoReel.Start()
     if AutoReel.Enabled then
         log("⚠️ AutoReel already running")
@@ -68,7 +54,7 @@ function AutoReel.Start()
 
         log("✅ Listening for RE/PlayFishingEffect...")
 
-        -- When PlayFishingEffect fires
+        -- Step 1: when PlayFishingEffect fires
         connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerName, partName, quality)
             if not AutoReel.Enabled then return end
 
@@ -78,23 +64,23 @@ function AutoReel.Start()
                 tostring(quality)
             ))
 
-            -- Step 1: spam for 4s immediately after detection
-            SpamComplete(completedRE)
-
-            -- Step 2: then wait and finish reel normally
+            -- Step 2: wait for ReplicateTextEffect before sending FishingCompleted
             local conn
             conn = textEffectRE.OnClientEvent:Connect(function(...)
                 if not AutoReel.Enabled then return end
 
-                log("💡 ReplicateTextEffect received, finishing reel...")
+                log("💡 ReplicateTextEffect received, conditions met — finishing reel...")
 
-                task.wait(0.2) -- small human-like delay
-                pcall(function()
-                    completedRE:FireServer()
-                end)
+                local start = tick()
+                    while AutoReel.Enabled and (tick() - start < 4) do
+                        pcall(function()
+                            completedRE:FireServer()
+                        end)
+                        log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
+                        task.wait(0.08) -- 80ms delay
+                    end
 
-                log("✅ AutoReel: Sent RE/FishingCompleted (finalize)")
-
+                -- disconnect after firing once for this cycle
                 if conn then
                     conn:Disconnect()
                     conn = nil
