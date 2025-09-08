@@ -55,32 +55,45 @@ function AutoReel.Start()
         log("✅ Listening for RE/PlayFishingEffect...")
 
         -- Step 1: when PlayFishingEffect fires
-        connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerName, partName, quality)
+        connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerDisplayName, partName, quality)
             if not AutoReel.Enabled then return end
 
+            -- ✅ Only continue if the event is for you
+            if playerDisplayName and tostring(playerDisplayName) ~= LocalPlayer.DisplayName then
+                log(("⏩ Ignored PlayFishingEffect from %s"):format(tostring(playerDisplayName)))
+                return
+            end
+
             log(("🎣 PlayFishingEffect: %s, %s, quality=%s"):format(
-                tostring(playerName),
+                tostring(playerDisplayName),
                 tostring(partName),
                 tostring(quality)
             ))
 
             -- Step 2: wait for ReplicateTextEffect before sending FishingCompleted
             local conn
-            conn = textEffectRE.OnClientEvent:Connect(function(...)
+            conn = textEffectRE.OnClientEvent:Connect(function(textPlayerDisplayName, ...)
                 if not AutoReel.Enabled then return end
 
+                -- ✅ Only continue if the event is for you
+                if textPlayerDisplayName and tostring(textPlayerDisplayName) ~= LocalPlayer.DisplayName then
+                    log(("⏩ Ignored ReplicateTextEffect from %s"):format(tostring(textPlayerDisplayName)))
+                    return
+                end
+
                 log("💡 ReplicateTextEffect received, conditions met — finishing reel...")
-                
+
                 log("💡 Waited 1 sec")
                 local start = tick()
-                    while AutoReel.Enabled and (tick() - start < 3) do
-                        pcall(function()
-                            completedRE:FireServer()
-                        end)
-                        log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
-                        task.wait(0.00) -- 5ms delay
-                    end
-                    log("✅ AutoReel: DONE")
+                while AutoReel.Enabled and (tick() - start < 3) do
+                    pcall(function()
+                        completedRE:FireServer()
+                    end)
+                    log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
+                    task.wait(0.00) -- 5ms delay
+                end
+                log("✅ AutoReel: DONE")
+
                 -- disconnect after firing once for this cycle
                 if conn then
                     conn:Disconnect()
@@ -96,10 +109,4 @@ function AutoReel.Stop()
     for name, conn in pairs(connections) do
         if conn.Disconnect then
             conn:Disconnect()
-        end
-        connections[name] = nil
-    end
-    log("⏹ AutoReel stopped")
-end
-
-return AutoReel
+        e
