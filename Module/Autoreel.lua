@@ -66,28 +66,21 @@ function AutoReel.Start()
 
             -- Step 2: wait for ReplicateTextEffect before sending FishingCompleted
             local conn
-            conn = textEffectRE.OnClientEvent:Connect(function(textPlayerName, ...)
+            conn = textEffectRE.OnClientEvent:Connect(function(...)
                 if not AutoReel.Enabled then return end
 
-                -- ✅ Filter: ignore if not mine
-                if textPlayerName and tostring(textPlayerName) ~= "" and tostring(textPlayerName) ~= LocalPlayer.Name then
-                    log(("⏩ Ignored ReplicateTextEffect from %s"):format(tostring(textPlayerName)))
-                    return
-                end
-
                 log("💡 ReplicateTextEffect received, conditions met — finishing reel...")
-
+                
                 log("💡 Waited 1 sec")
                 local start = tick()
-                while AutoReel.Enabled and (tick() - start < 3) do
-                    pcall(function()
-                        completedRE:FireServer()
-                    end)
-                    log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
-                    task.wait(0.00) -- 5ms delay
-                end
-                log("✅ AutoReel: DONE")
-
+                    while AutoReel.Enabled and (tick() - start < 3) do
+                        pcall(function()
+                            completedRE:FireServer()
+                        end)
+                        log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
+                        task.wait(0.00) -- 5ms delay
+                    end
+                    log("✅ AutoReel: DONE")
                 -- disconnect after firing once for this cycle
                 if conn then
                     conn:Disconnect()
