@@ -70,7 +70,7 @@ function AutoReel.Start()
                 if not AutoReel.Enabled then return end
 
                 log("💡 ReplicateTextEffect received, conditions met — finishing reel...")
-                task.wait(1)
+                task.wait(0.5)
                 log("💡 Waited 1 sec")
                 local start = tick()
                     while AutoReel.Enabled and (tick() - start < 2) do
