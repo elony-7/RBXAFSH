@@ -25,6 +25,23 @@ local function WaitForChildRecursive(parent, childName, timeout)
     return success and obj or nil
 end
 
+-- Safe polling for RE folder
+local function WaitForREFolder(netFolder, retryDelay, maxRetries)
+    retryDelay = retryDelay or 0.5
+    maxRetries = maxRetries or 20 -- total 10 seconds by default
+    local retries = 0
+    local reFolder
+    while retries < maxRetries do
+        reFolder = netFolder:FindFirstChild("RE")
+        if reFolder then
+            return reFolder
+        end
+        task.wait(retryDelay)
+        retries = retries + 1
+    end
+    return nil
+end
+
 -- Main function to start listening for minigame events
 function AutoReel.Start()
     if AutoReel.Enabled then
@@ -52,10 +69,21 @@ function AutoReel.Start()
 
         log("✅ Net folder found")
 
-        -- Wait for RemoteEvents
-        local reFolder = netFolder:WaitForChild("RE")
-        local minigameRE = reFolder:WaitForChild("FishingMinigameChanged")
-        local completedRE = reFolder:WaitForChild("FishingCompleted")
+        -- Wait for RemoteEvents safely
+        local reFolder = WaitForREFolder(netFolder, 0.5, 20)
+        if not reFolder then
+            log("❌ RE folder not found after timeout")
+            AutoReel.Enabled = false
+            return
+        end
+
+        local minigameRE = reFolder:FindFirstChild("FishingMinigameChanged")
+        local completedRE = reFolder:FindFirstChild("FishingCompleted")
+        if not minigameRE or not completedRE then
+            log("❌ Required RemoteEvents not found!")
+            AutoReel.Enabled = false
+            return
+        end
 
         log("✅ RemoteEvents found, listening for minigame events...")
 
