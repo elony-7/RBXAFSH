@@ -43,8 +43,8 @@ local function waitForEquip(character)
     end
 end
 
--- Helper: play an animation on the character using the full module path
-local function playAnimation(character, animModulePath)
+-- Helper: play an animation on the character using the Animation instance path
+local function playAnimation(character, animModulePath, looped)
     local humanoid = character:FindFirstChild("Humanoid")
     if not humanoid then return nil end
 
@@ -55,13 +55,14 @@ local function playAnimation(character, animModulePath)
     end
 
     local animData = animModulePath
-    if not animData or not animData.Animation then
+    if not animData or not animData:FindFirstChild("Animation") then
         warn("Animation not found at path:", animModulePath:GetFullName())
         return nil
     end
 
     local track = animator:LoadAnimation(animData.Animation)
     track.Priority = animData.AnimationPriority or Enum.AnimationPriority.Action
+    track.Looped = looped or false
     track:Play()
     return track
 end
@@ -71,6 +72,7 @@ function AutoFishing.Start()
     AutoFishing.Enabled = true
     task.spawn(function()
         local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local AnimationsFolder = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Animations")
 
         while AutoFishing.Enabled do
             task.wait(0.5)
@@ -104,8 +106,8 @@ function AutoFishing.Start()
             waitForEquip(char)
             log("✅ Fishing rod equipped, starting casting...")
 
-            -- Play charging animation
-            local chargeTrack = playAnimation(char, ReplicatedStorage.Modules.Animations.StartChargingRod1Hand)
+            -- 1️⃣ Play charging animation
+            local chargeTrack = playAnimation(char, AnimationsFolder:WaitForChild("StartChargingRod1Hand"))
             if chargeTrack then
                 log("🎬 Playing charge animation...")
             end
@@ -127,13 +129,20 @@ function AutoFishing.Start()
             if chargeTrack then
                 chargeTrack.Stopped:Wait()
             else
-                task.wait(2.7) -- fallback wait
+                task.wait(2.7)
             end
 
-            -- Play cast animation
-            local castTrack = playAnimation(char, ReplicatedStorage.Modules.Animations.CastFromFullChargePosition1Hand)
+            -- 2️⃣ Play cast animation
+            local castTrack = playAnimation(char, AnimationsFolder:WaitForChild("CastFromFullChargePosition1Hand"))
             if castTrack then
                 log("🎬 Playing cast animation...")
+                castTrack.Stopped:Wait()
+            end
+
+            -- 3️⃣ Play looping FishingRodReelIdle animation
+            local reelTrack = playAnimation(char, AnimationsFolder:WaitForChild("FishingRodReelIdle"), true)
+            if reelTrack then
+                log("🎣 Playing reel idle animation (looping)...")
             end
 
             -- Start fishing minigame
@@ -155,6 +164,11 @@ function AutoFishing.Start()
             end
 
             task.wait(1) -- simulated minigame duration
+
+            -- Stop reel idle animation when minigame completes
+            if reelTrack then
+                reelTrack:Stop()
+            end
 
             -- Complete fishing minigame
             local completedRE = netFolder:FindFirstChild("RE/FishingCompleted")
