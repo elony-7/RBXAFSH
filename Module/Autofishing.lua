@@ -35,7 +35,7 @@ local function waitForEquip(character)
     end
 end
 
--- Helper: play animation from module, optionally looped
+-- Corrected function to play animation from module
 local function playAnimation(character, animData, looped)
     local humanoid = character:FindFirstChild("Humanoid")
     if not humanoid then return nil end
@@ -46,24 +46,26 @@ local function playAnimation(character, animData, looped)
         animator.Parent = humanoid
     end
 
-    if not animData.AnimationId then
+    if not animData or not animData.AnimationId then
         warn("AnimationId missing for module", animData)
         return nil
     end
 
+    -- Create Animation instance
     local animation = Instance.new("Animation")
     animation.AnimationId = animData.AnimationId
 
+    -- Load it into Animator
     local track = animator:LoadAnimation(animation)
     track.Priority = animData.AnimationPriority or Enum.AnimationPriority.Action
-    track.Looped = looped or false
-    track:Play()
+    track.Looped = looped or animData.Looped or false
 
-    -- Set playback speed if defined
+    -- Set playback speed
     if animData.PlaybackSpeed then
         track:AdjustSpeed(animData.PlaybackSpeed)
     end
 
+    track:Play()
     return track
 end
 
@@ -124,11 +126,11 @@ function AutoFishing.Start()
             local chargeTrack = playAnimation(char, chargeAnimData)
             log("🎬 Playing charge animation...")
 
-            -- 2️⃣ Hold charge for desired time
-            local chargeHoldTime = chargeAnimData.Length or 2.5 -- you can adjust for perfect cast
+            -- 2️⃣ Hold charge for desired time (simulate mouse hold)
+            local chargeHoldTime = chargeAnimData.Length or 2.5
             task.wait(chargeHoldTime)
 
-            -- 3️⃣ Release charge (simulate mouse release) → tell server
+            -- 3️⃣ Release charge → tell server
             local chargeRF = netFolder:FindFirstChild("RF/ChargeFishingRod")
             if chargeRF then
                 pcall(function()
