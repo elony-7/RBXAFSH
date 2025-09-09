@@ -33,7 +33,7 @@ local function waitForUpdateCharge()
         end
     end)
     repeat task.wait(0.05) until fired or not running
-    task.wait(1.5) -- 300ms delay after event
+    task.wait(0.3) -- 300ms delay after event
 end
 
 -- Perform one cast cycle
@@ -45,6 +45,8 @@ local function castCycle()
     local bar = chargeGui:WaitForChild("Main"):WaitForChild("CanvasGroup"):WaitForChild("Bar")
     local lastCheck = 0
     local checkInterval = 0.200
+    local timeout = 6 -- 6 seconds timeout
+    local startTime = tick()
 
     -- Hold mouse down at start
     VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, true, game, 0)
@@ -62,6 +64,17 @@ local function castCycle()
         if lastCheck < checkInterval then return end
         lastCheck = 0
 
+        -- Check timeout
+        if tick() - startTime >= timeout then
+            print("[AutoCastPerfect] Timeout reached, releasing mouse and moving to next cycle")
+            VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, false, game, 0)
+            if connection then
+                connection:Disconnect()
+                connection = nil
+            end
+            return
+        end
+
         local barScaleY = bar.Size.Y.Scale
         local firstDecimal = math.floor((barScaleY * 10) % 10)
         if firstDecimal == 9 then
@@ -75,7 +88,7 @@ local function castCycle()
         end
     end)
 
-    -- Wait until mouse is released (perfect value reached)
+    -- Wait until mouse is released (perfect value reached or timeout)
     repeat task.wait(0.05) until not connection or not running
     if not running then return end
 
