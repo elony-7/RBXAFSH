@@ -33,7 +33,7 @@ local function waitForUpdateCharge()
         end
     end)
     repeat task.wait(0.05) until fired or not running
-    task.wait(1) -- 300ms delay after event
+    task.wait(1.2) -- 300ms delay after event
 end
 
 -- Perform one cast cycle
