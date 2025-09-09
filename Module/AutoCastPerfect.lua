@@ -48,7 +48,7 @@ local function waitForUpdateCharge(timeout)
     if not fired then
         print("[AutoCastPerfect] UpdateChargeState timeout reached, starting next cycle")
     else
-        task.wait(0.3) -- 300ms delay after successful UpdateChargeState
+        task.wait(1.5) -- 1500ms delay after successful UpdateChargeState
     end
 end
 
