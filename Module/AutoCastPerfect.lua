@@ -9,14 +9,20 @@ local player = Players.LocalPlayer
 local running = false
 local loopThread
 
--- Utility to get screen center
+-- Screen center utility
 local function getScreenCenter()
     local viewportSize = workspace.CurrentCamera.ViewportSize
     return viewportSize.X / 2, viewportSize.Y / 2
 end
 
--- Main detection function using task.wait
-local function detectionLoop()
+-- Start module
+function AutoCastPerfect.Start()
+    if running then
+        print("[AutoCastPerfect] Already running")
+        return
+    end
+    running = true
+
     local centerX, centerY = getScreenCenter()
 
     -- Wait for GUI
@@ -27,10 +33,11 @@ local function detectionLoop()
     VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, true, game, 0)
     print("[AutoCastPerfect] Mouse held down")
 
-    -- Detection loop with hardcoded delay
+    -- Run detection in a separate thread
     loopThread = task.spawn(function()
         while running do
-            task.wait(0.1) -- hardcoded delay ~100ms
+            -- Hardcoded delay
+            task.wait(0.067) -- ~15 times per second
 
             if not running then break end
 
@@ -44,16 +51,6 @@ local function detectionLoop()
             end
         end
     end)
-end
-
--- Start module
-function AutoCastPerfect.Start()
-    if running then
-        print("[AutoCastPerfect] Already running")
-        return
-    end
-    running = true
-    detectionLoop()
 end
 
 -- Stop module
