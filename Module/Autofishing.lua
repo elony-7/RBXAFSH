@@ -46,8 +46,9 @@ local function playAnimation(character, animData, looped)
         animator.Parent = humanoid
     end
 
+    -- animData must have AnimationId
     if not animData or not animData.AnimationId then
-        warn("AnimationId missing for module", animData)
+        warn("AnimationId missing in module", animData)
         return nil
     end
 
@@ -55,12 +56,20 @@ local function playAnimation(character, animData, looped)
     local animation = Instance.new("Animation")
     animation.AnimationId = animData.AnimationId
 
-    -- Load it into Animator
-    local track = animator:LoadAnimation(animation)
+    -- Load it into Animator safely
+    local track
+    local ok, err = pcall(function()
+        track = animator:LoadAnimation(animation)
+    end)
+    if not ok then
+        warn("Failed to load animation:", err)
+        return nil
+    end
+
+    -- Set track properties safely
     track.Priority = animData.AnimationPriority or Enum.AnimationPriority.Action
     track.Looped = looped or animData.Looped or false
 
-    -- Set playback speed
     if animData.PlaybackSpeed then
         track:AdjustSpeed(animData.PlaybackSpeed)
     end
