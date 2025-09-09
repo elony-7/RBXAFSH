@@ -48,7 +48,7 @@ local function waitForUpdateCharge(timeout)
     if not fired then
         print("[AutoCastPerfect] UpdateChargeState timeout reached, starting next cycle")
     else
-        task.wait(1.5) -- 1500ms delay after successful UpdateChargeState
+        task.wait(2.3) -- 2300ms delay after successful UpdateChargeState
     end
 end
 
@@ -61,7 +61,7 @@ local function castCycle()
     local bar = chargeGui:WaitForChild("Main"):WaitForChild("CanvasGroup"):WaitForChild("Bar")
     local lastCheck = 0
     local checkInterval = 0.200
-    local timeout = 6
+    local timeout = 8
     local startTime = tick()
 
     -- Hold mouse down at start
@@ -104,7 +104,7 @@ local function castCycle()
     end)
 
     -- Wait until cycle done
-    repeat task.wait(0.05) until cycleDone or not running
+    repeat task.wait(0.00) until cycleDone or not running
     if not running then return end
 
     -- Wait for UpdateChargeState before starting next cycle
