@@ -10,7 +10,7 @@ local player = Players.LocalPlayer
 local running = false
 local connection
 local lastCheck = 0
-local checkInterval = 0.100 -- 100ms
+local checkInterval = 0.500 -- 100ms
 
 -- Utility to get screen center
 local function getScreenCenter()
