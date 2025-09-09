@@ -13,7 +13,6 @@ end
 
 -- Wait for the equipped fishing tool
 local function waitForEquip(character)
-    -- Check if tool already exists and has 'Main'
     local equippedTool = character:FindFirstChild("!!!EQUIPPED_TOOL!!!")
     if equippedTool and equippedTool:FindFirstChild("Main") then
         log("✅ Equipped tool with 'Main' already present.")
@@ -42,6 +41,29 @@ local function waitForEquip(character)
             end
         end
     end
+end
+
+-- Helper: play an animation on the character using the full module path
+local function playAnimation(character, animModulePath)
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return nil end
+
+    local animator = humanoid:FindFirstChildOfClass("Animator")
+    if not animator then
+        animator = Instance.new("Animator")
+        animator.Parent = humanoid
+    end
+
+    local animData = animModulePath
+    if not animData or not animData.Animation then
+        warn("Animation not found at path:", animModulePath:GetFullName())
+        return nil
+    end
+
+    local track = animator:LoadAnimation(animData.Animation)
+    track.Priority = animData.AnimationPriority or Enum.AnimationPriority.Action
+    track:Play()
+    return track
 end
 
 -- Start auto fishing
@@ -82,34 +104,57 @@ function AutoFishing.Start()
             waitForEquip(char)
             log("✅ Fishing rod equipped, starting casting...")
 
-            -- Charge fishing rod
+            -- Play charging animation
+            local chargeTrack = playAnimation(char, ReplicatedStorage.Modules.Animations.StartChargingRod1Hand)
+            if chargeTrack then
+                log("🎬 Playing charge animation...")
+            end
+
+            -- Notify server that we're charging
             local chargeRF = netFolder:FindFirstChild("RF/ChargeFishingRod")
             if chargeRF and chargeRF:IsA("RemoteFunction") then
                 pcall(function()
                     chargeRF:InvokeServer(workspace:GetServerTimeNow())
                 end)
-                log("⚡ Charging rod...")
+                log("⚡ Charging rod (server notified)...")
+            else
+                log("⚠️ ChargeFishingRod not found!")
+                task.wait(1)
+                continue
+            end
+
+            -- Wait for charge animation to finish
+            if chargeTrack then
+                chargeTrack.Stopped:Wait()
+            else
+                task.wait(2.7) -- fallback wait
+            end
+
+            -- Play cast animation
+            local castTrack = playAnimation(char, ReplicatedStorage.Modules.Animations.CastFromFullChargePosition1Hand)
+            if castTrack then
+                log("🎬 Playing cast animation...")
             end
 
             -- Start fishing minigame
             local startRF = netFolder:FindFirstChild("RF/RequestFishingMinigameStarted")
             if startRF and startRF:IsA("RemoteFunction") then
-                log("🎮 Starting fishing minigame...") -- log immediately before sending
-
+                log("🎮 Starting fishing minigame...")
                 local success, result = pcall(function()
                     return startRF:InvokeServer(-1.2379989624023438, 1)
                 end)
-
                 if success then
                     log("✅ Minigame start acknowledged by server: " .. tostring(result))
                 else
                     log("❌ Failed to start minigame: " .. tostring(result))
                 end
-
-                log("⏳ Waiting for fishing minigame to complete...")
+            else
+                log("⚠️ RequestFishingMinigameStarted not found!")
+                task.wait(1)
+                continue
             end
 
-            task.wait(1) -- Wait for the minigame duration
+            task.wait(1) -- simulated minigame duration
 
             -- Complete fishing minigame
             local completedRE = netFolder:FindFirstChild("RE/FishingCompleted")
@@ -118,6 +163,8 @@ function AutoFishing.Start()
                     completedRE:FireServer()
                 end)
                 log("✅ Completing fishing minigame...")
+            else
+                log("⚠️ FishingCompleted not found!")
             end
         end
     end)
