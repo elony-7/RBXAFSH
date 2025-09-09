@@ -9,24 +9,19 @@ local player = Players.LocalPlayer
 
 -- Module state
 local running = false
-local connection
-local lastCheck = 0
-local checkInterval = 0.200 -- 200ms
-
--- RemoteEvent for UpdateChargeState
 local updateChargeRE = ReplicatedStorage:WaitForChild("Packages")
     :WaitForChild("_Index")
     :WaitForChild("sleitnick_net@0.2.0")
     :WaitForChild("net")
     :WaitForChild("RE/UpdateChargeState")
 
--- Utility to get screen center
+-- Utility: screen center
 local function getScreenCenter()
     local viewportSize = workspace.CurrentCamera.ViewportSize
     return viewportSize.X / 2, viewportSize.Y / 2
 end
 
--- Wait for UpdateChargeState event
+-- Wait for UpdateChargeState
 local function waitForUpdateCharge()
     local fired = false
     local conn
@@ -37,51 +32,61 @@ local function waitForUpdateCharge()
             conn = nil
         end
     end)
-
-    -- Wait until the event fires or toggle is off
     repeat task.wait(0.05) until fired or not running
     task.wait(0.3) -- 300ms delay after event
 end
 
--- Main detection loop
-local function detectionLoop()
-    while running do
-        local centerX, centerY = getScreenCenter()
+-- Perform one cast cycle
+local function castCycle()
+    if not running then return end
 
-        -- Wait for GUI
-        local chargeGui = player:WaitForChild("PlayerGui"):WaitForChild("Charge")
-        local bar = chargeGui:WaitForChild("Main"):WaitForChild("CanvasGroup"):WaitForChild("Bar")
+    local centerX, centerY = getScreenCenter()
+    local chargeGui = player:WaitForChild("PlayerGui"):WaitForChild("Charge")
+    local bar = chargeGui:WaitForChild("Main"):WaitForChild("CanvasGroup"):WaitForChild("Bar")
+    local lastCheck = 0
+    local checkInterval = 0.200
 
-        -- Hold mouse down
-        VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, true, game, 0)
-        print("[AutoCastPerfect] Mouse held down")
+    -- Hold mouse down at start
+    VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, true, game, 0)
+    print("[AutoCastPerfect] Mouse held down for new cast cycle")
 
-        lastCheck = 0
-
-        -- Disconnect previous connection if any
-        if connection then
-            connection:Disconnect()
-            connection = nil
+    -- Use RenderStepped for this cycle
+    local connection
+    connection = RunService.RenderStepped:Connect(function(delta)
+        if not running then
+            if connection then connection:Disconnect() end
+            return
         end
 
-        -- Detection loop for this cast
-        connection = RunService.RenderStepped:Connect(function(delta)
-            if not running then return end
+        lastCheck = lastCheck + delta
+        if lastCheck < checkInterval then return end
+        lastCheck = 0
 
-            lastCheck = lastCheck + delta
-            if lastCheck < checkInterval then return end
-            lastCheck = 0
-
-            local barScaleY = bar.Size.Y.Scale
-            local firstDecimal = math.floor((barScaleY * 10) % 10)
-            if firstDecimal == 9 then
-                VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, false, game, 0)
-                print("[AutoCastPerfect] Mouse released! Detected bar scale Y:", barScaleY)
+        local barScaleY = bar.Size.Y.Scale
+        local firstDecimal = math.floor((barScaleY * 10) % 10)
+        if firstDecimal == 9 then
+            -- Release mouse when perfect
+            VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, false, game, 0)
+            print("[AutoCastPerfect] Mouse released! Bar scale Y:", barScaleY)
+            if connection then
+                connection:Disconnect()
+                connection = nil
             end
-        end)
+        end
+    end)
 
-        -- Wait for UpdateChargeState before next cast
-        waitForUpdateCharge()
+    -- Wait until mouse is released (perfect value reached)
+    repeat task.wait(0.05) until not connection or not running
+    if not running then return end
+
+    -- Wait for UpdateChargeState event before next cycle
+    waitForUpdateCharge()
+end
+
+-- Main loop
+local function mainLoop()
+    while running do
+        castCycle()
     end
 end
 
@@ -92,19 +97,13 @@ function AutoCastPerfect.Start()
         return
     end
     running = true
-    task.spawn(detectionLoop)
+    task.spawn(mainLoop)
 end
 
 -- Stop module
 function AutoCastPerfect.Stop()
     if not running then return end
     running = false
-
-    -- Disconnect connection
-    if connection then
-        connection:Disconnect()
-        connection = nil
-    end
 
     -- Release mouse
     local centerX, centerY = getScreenCenter()
