@@ -35,8 +35,13 @@ local function waitForEquip(character)
     end
 end
 
--- Corrected function to play animation from module
-local function playAnimation(character, animData, looped)
+-- Corrected function to play animation safely
+local function playAnimation(character, animModule, looped)
+    if not animModule or not animModule.AnimationId then
+        warn("AnimationId missing in module", animModule)
+        return nil
+    end
+
     local humanoid = character:FindFirstChild("Humanoid")
     if not humanoid then return nil end
 
@@ -46,17 +51,9 @@ local function playAnimation(character, animData, looped)
         animator.Parent = humanoid
     end
 
-    -- animData must have AnimationId
-    if not animData or not animData.AnimationId then
-        warn("AnimationId missing in module", animData)
-        return nil
-    end
-
-    -- Create Animation instance
     local animation = Instance.new("Animation")
-    animation.AnimationId = animData.AnimationId
+    animation.AnimationId = animModule.AnimationId
 
-    -- Load it into Animator safely
     local track
     local ok, err = pcall(function()
         track = animator:LoadAnimation(animation)
@@ -66,26 +63,25 @@ local function playAnimation(character, animData, looped)
         return nil
     end
 
-    -- Set track properties safely
-    track.Priority = animData.AnimationPriority or Enum.AnimationPriority.Action
-    track.Looped = looped or animData.Looped or false
-
-    if animData.PlaybackSpeed then
-        track:AdjustSpeed(animData.PlaybackSpeed)
+    -- Set properties on the AnimationTrack, not the module table
+    track.Priority = animModule.AnimationPriority or Enum.AnimationPriority.Action
+    track.Looped = looped or animModule.Looped or false
+    if animModule.PlaybackSpeed then
+        track:AdjustSpeed(animModule.PlaybackSpeed)
     end
 
     track:Play()
     return track
 end
 
--- Handle linked markers for animations
-local function handleLinkedMarkers(track, animData, character, AnimationsFolder)
-    if animData.LinkedMarkers then
-        for markerName, linkedName in pairs(animData.LinkedMarkers) do
+-- Handle LinkedMarkers for animations
+local function handleLinkedMarkers(track, animModule, character, AnimationsFolder)
+    if animModule.LinkedMarkers then
+        for markerName, linkedName in pairs(animModule.LinkedMarkers) do
             track:GetMarkerReachedSignal(markerName):Connect(function()
                 local linkedAnim = AnimationsFolder:FindFirstChild(linkedName)
                 if linkedAnim then
-                    playAnimation(character, linkedAnim, true) -- loop reel idle
+                    playAnimation(character, linkedAnim, true)
                 end
             end)
         end
@@ -97,7 +93,7 @@ function AutoFishing.Start()
     AutoFishing.Enabled = true
     task.spawn(function()
         local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local AnimationsFolder = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Animations")
+        local AnimationsFolder = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Animations"))
 
         while AutoFishing.Enabled do
             task.wait(0.5)
@@ -131,7 +127,7 @@ function AutoFishing.Start()
             waitForEquip(char)
 
             -- 1️⃣ Start charging animation
-            local chargeAnimData = AnimationsFolder:WaitForChild("StartChargingRod1Hand")
+            local chargeAnimData = AnimationsFolder.StartChargingRod1Hand
             local chargeTrack = playAnimation(char, chargeAnimData)
             log("🎬 Playing charge animation...")
 
@@ -139,7 +135,7 @@ function AutoFishing.Start()
             local chargeHoldTime = chargeAnimData.Length or 2.5
             task.wait(chargeHoldTime)
 
-            -- 3️⃣ Release charge → tell server
+            -- 3️⃣ Release charge → notify server
             local chargeRF = netFolder:FindFirstChild("RF/ChargeFishingRod")
             if chargeRF then
                 pcall(function()
@@ -149,14 +145,14 @@ function AutoFishing.Start()
             end
 
             -- 4️⃣ Play cast animation
-            local castAnimData = AnimationsFolder:WaitForChild("CastFromFullChargePosition1Hand")
+            local castAnimData = AnimationsFolder.CastFromFullChargePosition1Hand
             local castTrack = playAnimation(char, castAnimData)
             handleLinkedMarkers(castTrack, castAnimData, char, AnimationsFolder)
             log("🎬 Playing cast animation...")
             if castTrack then castTrack.Stopped:Wait() end
 
             -- 5️⃣ Start FishingRodReelIdle looped animation
-            local reelAnimData = AnimationsFolder:WaitForChild("FishingRodReelIdle")
+            local reelAnimData = AnimationsFolder.FishingRodReelIdle
             local reelTrack = playAnimation(char, reelAnimData, true)
             log("🎣 Playing reel idle animation (looping)...")
 
@@ -169,7 +165,7 @@ function AutoFishing.Start()
                 log("🎮 Minigame started")
             end
 
-            task.wait(1) -- simulated minigame duration
+            task.wait(1) -- simulate minigame duration
 
             -- Stop reel idle when finished
             if reelTrack then
