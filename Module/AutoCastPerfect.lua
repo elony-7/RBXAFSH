@@ -32,9 +32,7 @@ local function waitForUpdateCharge()
             conn = nil
         end
     end)
-    print("[AutoCastPerfect] Waiting for UpdateChargeState event...")
     repeat task.wait(0.05) until fired or not running
-    Print("[AutoCastPerfect] UpdateChargeState event received")
     task.wait(2) -- 300ms delay after event
 end
 
