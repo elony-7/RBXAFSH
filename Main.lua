@@ -21,6 +21,7 @@ Notify("Notification", "Script is loading...", 5)
 --========================
 local AutoFishing = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Autofishing.lua"))()
 local AutoReel = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Autoreel.lua"))()
+local AutoCastPerfect = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/AutoCastPerfect.lua"))()
 local TeleportModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleport.lua"))()
 local TeleportToPlayer = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleporttoplayer.lua"))()
 local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PurchaseWeather.lua"))()
@@ -28,7 +29,7 @@ local PlayerModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/
 local autosellmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main//Module/sellAllItems.lua"))()
 local antiafkmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Antiafk.lua"))()
 
-print("Modules loaded:", AutoFishing, TeleportModule, TeleportToPlayer, PurchaseWeather,PlayerModule, autosellmodule, antiafkmodule)
+print("Modules loaded:", AutoFishing, AutoReel, AutoCastPerfect, TeleportModule, TeleportToPlayer, PurchaseWeather,PlayerModule, autosellmodule, antiafkmodule)
 
 --========================
 -- Create Main Window
@@ -79,6 +80,26 @@ do
         end
     end)
 end
+
+--==== Auto Cast Perfect Toggle ===
+
+do
+    FarmTab:AddToggle("AutoCastPerfect", {
+        Title = "🎣 Auto Cast Perfect",
+        Description = "Automatically casts the fishing line perfectly.",
+        Default = false
+    }):OnChanged(function(val)
+        if val then
+            AutoCastPerfect.Start()
+            print("✅ Auto Cast Perfect ENABLED")
+            Notify("✅ Auto Cast Perfect", "Auto Cast Perfect ENABLED", 2)
+        else
+            AutoCastPerfect.Stop()
+            print("❌ Auto Cast Perfect DISABLED")
+            Notify("❌ Auto Cast Perfect", "Auto Cast Perfect DISABLED", 2)
+        end
+    end)
+
 
 --==== Auto Reel Toggle ====
 do
