@@ -25,7 +25,7 @@ local function startSpam()
             pcall(function()
                 completedRE:FireServer()
             end)
-            task.wait(0.04) -- 40ms delay
+            task.wait(1) -- 40ms delay
         end
     end)
 end
