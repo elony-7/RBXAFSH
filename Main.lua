@@ -99,7 +99,7 @@ do
             Notify("❌ Auto Cast Perfect", "Auto Cast Perfect DISABLED", 2)
         end
     end)
-
+end
 
 --==== Auto Reel Toggle ====
 do

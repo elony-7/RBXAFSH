@@ -25,7 +25,7 @@ local function detectionLoop()
     local bar = chargeGui:WaitForChild("Main"):WaitForChild("CanvasGroup"):WaitForChild("Bar")
 
     local lastCheck = 0
-    local checkInterval = 0.067 -- ~15 times per second
+    local checkInterval = 0.070 -- ~15 times per second
 
     -- Hold mouse down
     VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, true, game, 0)
