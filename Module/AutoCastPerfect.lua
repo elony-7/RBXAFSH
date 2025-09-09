@@ -21,7 +21,7 @@ local function getScreenCenter()
     return viewportSize.X / 2, viewportSize.Y / 2
 end
 
--- Wait for UpdateChargeState with timeout
+-- Wait for UpdateChargeState with 6s timeout
 local function waitForUpdateCharge(timeout)
     timeout = timeout or 6
     local fired = false
@@ -61,12 +61,14 @@ local function castCycle()
     local bar = chargeGui:WaitForChild("Main"):WaitForChild("CanvasGroup"):WaitForChild("Bar")
     local lastCheck = 0
     local checkInterval = 0.200
+    local timeout = 6
+    local startTime = tick()
 
     -- Hold mouse down at start
     VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, true, game, 0)
     print("[AutoCastPerfect] Mouse held down for new cast cycle")
 
-    -- Use RenderStepped for this cycle
+    -- RenderStepped loop for this cycle
     local connection
     local cycleDone = false
     connection = RunService.RenderStepped:Connect(function(delta)
@@ -81,24 +83,32 @@ local function castCycle()
 
         local barScaleY = bar.Size.Y.Scale
         local firstDecimal = math.floor((barScaleY * 10) % 10)
+
+        -- Release mouse on perfect bar
         if firstDecimal == 9 then
-            -- Release mouse when perfect
             VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, false, game, 0)
             print("[AutoCastPerfect] Mouse released! Bar scale Y:", barScaleY)
             cycleDone = true
-            if connection then
-                connection:Disconnect()
-                connection = nil
-            end
+            if connection then connection:Disconnect() connection = nil end
+            return
+        end
+
+        -- Timeout check
+        if tick() - startTime >= timeout then
+            VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, false, game, 0)
+            print("[AutoCastPerfect] Timeout reached, releasing mouse and starting next cycle")
+            cycleDone = true
+            if connection then connection:Disconnect() connection = nil end
+            return
         end
     end)
 
-    -- Wait until cycle done (either perfect bar or timeout)
+    -- Wait until cycle done
     repeat task.wait(0.05) until cycleDone or not running
     if not running then return end
 
-    -- Wait for UpdateChargeState or timeout before next cycle
-    waitForUpdateCharge(6)
+    -- Wait for UpdateChargeState before starting next cycle
+    waitForUpdateCharge(timeout)
 end
 
 -- Main loop
