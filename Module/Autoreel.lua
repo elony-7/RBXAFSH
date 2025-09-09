@@ -58,6 +58,11 @@ function AutoReel.Start()
         connections["_autoreel_play"] = playEffectRE.OnClientEvent:Connect(function(playerName, partName, quality)
             if not AutoReel.Enabled then return end
 
+            -- Only respond to local player
+            if playerName ~= LocalPlayer.Name then
+                return
+            end
+
             log(("🎣 PlayFishingEffect: %s, %s, quality=%s"):format(
                 tostring(playerName),
                 tostring(partName),
@@ -66,21 +71,26 @@ function AutoReel.Start()
 
             -- Step 2: wait for ReplicateTextEffect before sending FishingCompleted
             local conn
-            conn = textEffectRE.OnClientEvent:Connect(function(...)
+            conn = textEffectRE.OnClientEvent:Connect(function(textPlayerName, ...)
                 if not AutoReel.Enabled then return end
+
+                -- Extra safety: ensure the text effect is for local player
+                if textPlayerName ~= LocalPlayer.Name then
+                    return
+                end
 
                 log("💡 ReplicateTextEffect received, conditions met — finishing reel...")
                 
                 log("💡 Waited 1 sec")
                 local start = tick()
-                    while AutoReel.Enabled and (tick() - start < 3) do
-                        pcall(function()
-                            completedRE:FireServer()
-                        end)
-                        log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
-                        task.wait(0.00) -- 5ms delay
-                    end
-                    log("✅ AutoReel: DONE")
+                while AutoReel.Enabled and (tick() - start < 3) do
+                    pcall(function()
+                        completedRE:FireServer()
+                    end)
+                    log("✅ AutoReel: Sent RE/FishingCompleted (spam)")
+                    task.wait(0.00) -- 5ms delay
+                end
+                log("✅ AutoReel: DONE")
                 -- disconnect after firing once for this cycle
                 if conn then
                     conn:Disconnect()
