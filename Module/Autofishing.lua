@@ -23,28 +23,20 @@ local function waitForEquip(character)
 
     while AutoFishing.Enabled do
         local child = character.ChildAdded:Wait()
-        log("Child added to character:", child.Name)
-
         if child.Name == "!!!EQUIPPED_TOOL!!!" then
             local mainChild = child:FindFirstChild("Main")
-            if mainChild then
-                log("✅ Equipped tool with 'Main' detected immediately.")
-                break
-            else
-                log("Waiting for 'Main' inside equipped tool...")
+            if mainChild then break end
+            mainChild = child.ChildAdded:Wait()
+            while mainChild.Name ~= "Main" do
                 mainChild = child.ChildAdded:Wait()
-                while mainChild.Name ~= "Main" do
-                    mainChild = child.ChildAdded:Wait()
-                end
-                log("✅ 'Main' detected inside equipped tool.")
-                break
             end
+            break
         end
     end
 end
 
--- Helper: play an animation on the character using the Animation instance path
-local function playAnimation(character, animModulePath, looped)
+-- Helper: play animation from module, optionally looped
+local function playAnimation(character, animData, looped)
     local humanoid = character:FindFirstChild("Humanoid")
     if not humanoid then return nil end
 
@@ -54,17 +46,39 @@ local function playAnimation(character, animModulePath, looped)
         animator.Parent = humanoid
     end
 
-    local animData = animModulePath
-    if not animData or not animData:FindFirstChild("Animation") then
-        warn("Animation not found at path:", animModulePath:GetFullName())
+    if not animData.AnimationId then
+        warn("AnimationId missing for module", animData)
         return nil
     end
 
-    local track = animator:LoadAnimation(animData.Animation)
+    local animation = Instance.new("Animation")
+    animation.AnimationId = animData.AnimationId
+
+    local track = animator:LoadAnimation(animation)
     track.Priority = animData.AnimationPriority or Enum.AnimationPriority.Action
     track.Looped = looped or false
     track:Play()
+
+    -- Set playback speed if defined
+    if animData.PlaybackSpeed then
+        track:AdjustSpeed(animData.PlaybackSpeed)
+    end
+
     return track
+end
+
+-- Handle linked markers for animations
+local function handleLinkedMarkers(track, animData, character, AnimationsFolder)
+    if animData.LinkedMarkers then
+        for markerName, linkedName in pairs(animData.LinkedMarkers) do
+            track:GetMarkerReachedSignal(markerName):Connect(function()
+                local linkedAnim = AnimationsFolder:FindFirstChild(linkedName)
+                if linkedAnim then
+                    playAnimation(character, linkedAnim, true) -- loop reel idle
+                end
+            end)
+        end
+    end
 end
 
 -- Start auto fishing
@@ -102,83 +116,62 @@ function AutoFishing.Start()
                 continue
             end
 
-            -- Wait until the equipped tool is fully ready
+            -- Wait until the equipped tool is ready
             waitForEquip(char)
-            log("✅ Fishing rod equipped, starting casting...")
 
-            -- 1️⃣ Play charging animation
-            local chargeTrack = playAnimation(char, AnimationsFolder:WaitForChild("StartChargingRod1Hand"))
-            if chargeTrack then
-                log("🎬 Playing charge animation...")
-            end
+            -- 1️⃣ Start charging animation
+            local chargeAnimData = AnimationsFolder:WaitForChild("StartChargingRod1Hand")
+            local chargeTrack = playAnimation(char, chargeAnimData)
+            log("🎬 Playing charge animation...")
 
-            -- Notify server that we're charging
+            -- 2️⃣ Hold charge for desired time
+            local chargeHoldTime = chargeAnimData.Length or 2.5 -- you can adjust for perfect cast
+            task.wait(chargeHoldTime)
+
+            -- 3️⃣ Release charge (simulate mouse release) → tell server
             local chargeRF = netFolder:FindFirstChild("RF/ChargeFishingRod")
-            if chargeRF and chargeRF:IsA("RemoteFunction") then
+            if chargeRF then
                 pcall(function()
                     chargeRF:InvokeServer(workspace:GetServerTimeNow())
                 end)
-                log("⚡ Charging rod (server notified)...")
-            else
-                log("⚠️ ChargeFishingRod not found!")
-                task.wait(1)
-                continue
+                log("⚡ Released charge (server notified)")
             end
 
-            -- Wait for charge animation to finish
-            if chargeTrack then
-                chargeTrack.Stopped:Wait()
-            else
-                task.wait(2.7)
-            end
+            -- 4️⃣ Play cast animation
+            local castAnimData = AnimationsFolder:WaitForChild("CastFromFullChargePosition1Hand")
+            local castTrack = playAnimation(char, castAnimData)
+            handleLinkedMarkers(castTrack, castAnimData, char, AnimationsFolder)
+            log("🎬 Playing cast animation...")
+            if castTrack then castTrack.Stopped:Wait() end
 
-            -- 2️⃣ Play cast animation
-            local castTrack = playAnimation(char, AnimationsFolder:WaitForChild("CastFromFullChargePosition1Hand"))
-            if castTrack then
-                log("🎬 Playing cast animation...")
-                castTrack.Stopped:Wait()
-            end
-
-            -- 3️⃣ Play looping FishingRodReelIdle animation
-            local reelTrack = playAnimation(char, AnimationsFolder:WaitForChild("FishingRodReelIdle"), true)
-            if reelTrack then
-                log("🎣 Playing reel idle animation (looping)...")
-            end
+            -- 5️⃣ Start FishingRodReelIdle looped animation
+            local reelAnimData = AnimationsFolder:WaitForChild("FishingRodReelIdle")
+            local reelTrack = playAnimation(char, reelAnimData, true)
+            log("🎣 Playing reel idle animation (looping)...")
 
             -- Start fishing minigame
             local startRF = netFolder:FindFirstChild("RF/RequestFishingMinigameStarted")
-            if startRF and startRF:IsA("RemoteFunction") then
-                log("🎮 Starting fishing minigame...")
-                local success, result = pcall(function()
-                    return startRF:InvokeServer(-1.2379989624023438, 1)
+            if startRF then
+                pcall(function()
+                    startRF:InvokeServer(-1.2379989624023438, 1)
                 end)
-                if success then
-                    log("✅ Minigame start acknowledged by server: " .. tostring(result))
-                else
-                    log("❌ Failed to start minigame: " .. tostring(result))
-                end
-            else
-                log("⚠️ RequestFishingMinigameStarted not found!")
-                task.wait(1)
-                continue
+                log("🎮 Minigame started")
             end
 
             task.wait(1) -- simulated minigame duration
 
-            -- Stop reel idle animation when minigame completes
+            -- Stop reel idle when finished
             if reelTrack then
                 reelTrack:Stop()
             end
 
             -- Complete fishing minigame
             local completedRE = netFolder:FindFirstChild("RE/FishingCompleted")
-            if completedRE and completedRE:IsA("RemoteEvent") then
+            if completedRE then
                 pcall(function()
                     completedRE:FireServer()
                 end)
                 log("✅ Completing fishing minigame...")
-            else
-                log("⚠️ FishingCompleted not found!")
             end
         end
     end)
