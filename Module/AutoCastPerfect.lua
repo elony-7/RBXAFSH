@@ -32,8 +32,10 @@ local function waitForUpdateCharge()
             conn = nil
         end
     end)
+    print("[AutoCastPerfect] Waiting for UpdateChargeState event...")
     repeat task.wait(0.05) until fired or not running
-    task.wait(0.3) -- 300ms delay after event
+    Print("[AutoCastPerfect] UpdateChargeState event received")
+    task.wait(2) -- 300ms delay after event
 end
 
 -- Perform one cast cycle
