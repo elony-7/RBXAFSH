@@ -4,7 +4,6 @@ local CameraModule = {}
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local StarterGui = game:GetService("StarterGui")
 
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
@@ -19,7 +18,7 @@ local keys = {W=false, S=false, A=false, D=false, Q=false, E=false}
 local freecamEnabled = false
 local detached = false
 
--- Roblox PlayerModule (for default controls)
+-- Roblox PlayerModule (controls movement)
 local controlModule = nil
 local function getControlModule()
 	if not controlModule then
@@ -40,6 +39,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
 	if input.KeyCode == Enum.KeyCode.Q then keys.Q = true end
 	if input.KeyCode == Enum.KeyCode.E then keys.E = true end
 
+	-- Toggle freecam with F
 	if input.KeyCode == Enum.KeyCode.F then
 		if detached then
 			CameraModule.Attach()
@@ -124,6 +124,19 @@ function CameraModule.Attach()
 	if savedSubject and savedType then
 		camera.CameraSubject = savedSubject
 		camera.CameraType = savedType
+
+		-- Snap camera back to character
+		local char = player.Character
+		if char then
+			local head = char:FindFirstChild("Head")
+			local hrp = char:FindFirstChild("HumanoidRootPart")
+			if head then
+				camera.CFrame = CFrame.new(head.Position)
+			elseif hrp then
+				camera.CFrame = CFrame.new(hrp.Position + Vector3.new(0, 2, 0))
+			end
+		end
+
 		savedSubject, savedType = nil, nil
 	end
 
