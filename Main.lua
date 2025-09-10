@@ -28,6 +28,7 @@ local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.c
 local PlayerModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PlayerModule.lua"))()
 local autosellmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main//Module/sellAllItems.lua"))()
 local antiafkmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Antiafk.lua"))()
+local CameraModule = loadstring(game:HttpgGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Camera.lua"))()
 
 print("Modules loaded:", AutoFishing, AutoReel, AutoCastPerfect, TeleportModule, TeleportToPlayer, PurchaseWeather,PlayerModule, autosellmodule, antiafkmodule)
 
@@ -222,6 +223,19 @@ do  -- NoClip Toggle
         Default = false
     }):OnChanged(function(val)
         PlayerModule.SetNoClip(val)
+    end)
+end
+
+
+--==== Camera Free View ====
+do
+    PlayerTab:AddToggle("FreeCam", {
+        Title = "📷 Free Cam",
+        Description = "Toggle free camera mode (Hotkey: F)",
+        Default = false
+    }):OnChanged(function(val)
+        CameraModule.ToggleFreecam(val)
+        Notify("Free Cam", val and "Free Cam ENABLED (Press F to detach/attach)" or "Free Cam DISABLED", 2)
     end)
 end
 
