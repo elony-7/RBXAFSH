@@ -28,7 +28,7 @@ local PurchaseWeather = loadstring(game:HttpGet("https://raw.githubusercontent.c
 local PlayerModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/PlayerModule.lua"))()
 local autosellmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main//Module/sellAllItems.lua"))()
 local antiafkmodule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Antiafk.lua"))()
-local CameraModule = loadstring(game:HttpgGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Camera.lua"))()
+local CameraModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Camera.lua"))()
 
 print("Modules loaded:", AutoFishing, AutoReel, AutoCastPerfect, TeleportModule, TeleportToPlayer, PurchaseWeather,PlayerModule, autosellmodule, antiafkmodule)
 
