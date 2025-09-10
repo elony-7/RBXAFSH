@@ -4,36 +4,42 @@ local CameraModule = {}
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
 
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
 -- Saved state
-local savedSubject = nil
-local savedType = nil
+local savedSubject, savedType = nil, nil
 local connection = nil
 local camRot = Vector2.new(0, 0)
 local speed = 2
-local keys = {
-	W = false, S = false, A = false, D = false,
-	Q = false, E = false
-}
+local keys = {W=false, S=false, A=false, D=false, Q=false, E=false}
 
--- Toggle flag (enabled by GUI button)
 local freecamEnabled = false
 local detached = false
 
--- Input handlers (only connected once)
+-- Roblox PlayerModule (for default controls)
+local controlModule = nil
+local function getControlModule()
+	if not controlModule then
+		local pm = require(player:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule"))
+		controlModule = pm:GetControls()
+	end
+	return controlModule
+end
+
+-- Input state
 UserInputService.InputBegan:Connect(function(input, processed)
 	if processed or not freecamEnabled then return end
+
 	if input.KeyCode == Enum.KeyCode.W then keys.W = true end
 	if input.KeyCode == Enum.KeyCode.S then keys.S = true end
 	if input.KeyCode == Enum.KeyCode.A then keys.A = true end
 	if input.KeyCode == Enum.KeyCode.D then keys.D = true end
 	if input.KeyCode == Enum.KeyCode.Q then keys.Q = true end
 	if input.KeyCode == Enum.KeyCode.E then keys.E = true end
-	
-	-- Hotkey toggle F
+
 	if input.KeyCode == Enum.KeyCode.F then
 		if detached then
 			CameraModule.Attach()
@@ -69,47 +75,62 @@ local function getMoveVector()
 	return dir
 end
 
--- Detach camera into freecam
+-- Freecam Detach
 function CameraModule.Detach()
 	if detached or not freecamEnabled then return end
+
+	-- Save camera state
 	if not savedSubject then
 		savedSubject = camera.CameraSubject
 		savedType = camera.CameraType
 	end
-	
+
+	-- Disable character controls
+	getControlModule():Disable()
+
+	-- Switch camera
 	camera.CameraType = Enum.CameraType.Scriptable
 	camera.CFrame = CFrame.new(
-		player.Character and player.Character:FindFirstChild("Head") and player.Character.Head.Position + Vector3.new(0, 5, 0) or Vector3.new(0,10,0)
+		player.Character and player.Character:FindFirstChild("Head") and player.Character.Head.Position + Vector3.new(0, 5, 0)
+		or Vector3.new(0,10,0)
 	)
 
+	-- Update loop
 	connection = RunService.RenderStepped:Connect(function(dt)
 		local cf = camera.CFrame
 		local forward, right, up = cf.LookVector, cf.RightVector, cf.UpVector
 		local move = getMoveVector()
 		local moveVec = (right * move.X + up * move.Y + forward * move.Z) * speed * dt
 		local rotCFrame = CFrame.Angles(0, camRot.Y, 0) * CFrame.Angles(camRot.X, 0, 0)
-		
+
 		camera.CFrame = CFrame.new(camera.CFrame.Position + moveVec) * rotCFrame
 	end)
+
 	detached = true
 end
 
--- Reattach to character
+-- Freecam Attach
 function CameraModule.Attach()
 	if not detached then return end
+
 	if connection then
 		connection:Disconnect()
 		connection = nil
 	end
+
+	-- Restore character controls
+	getControlModule():Enable()
+
 	if savedSubject and savedType then
 		camera.CameraSubject = savedSubject
 		camera.CameraType = savedType
 		savedSubject, savedType = nil, nil
 	end
+
 	detached = false
 end
 
--- Public toggle for GUI button
+-- Toggle from GUI button
 function CameraModule.ToggleFreecam(state)
 	freecamEnabled = state
 	if not state and detached then
