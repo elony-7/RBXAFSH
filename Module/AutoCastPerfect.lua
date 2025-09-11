@@ -23,7 +23,7 @@ end
 
 -- Wait for UpdateChargeState with 6s timeout
 local function waitForUpdateCharge(timeout)
-    timeout = timeout or 1
+    timeout = timeout or 6
     local fired = false
     local conn
     conn = updateChargeRE.OnClientEvent:Connect(function()
@@ -59,7 +59,7 @@ local function castCycle()
     local clickX, clickY = getScreenCorner()
     local chargeGui = player:WaitForChild("PlayerGui"):WaitForChild("Charge")
     local bar = chargeGui:WaitForChild("Main"):WaitForChild("CanvasGroup"):WaitForChild("Bar")
-    local timeout = 1
+    local timeout = 0
     local startTime = tick()
 
     -- Hold mouse down at start
