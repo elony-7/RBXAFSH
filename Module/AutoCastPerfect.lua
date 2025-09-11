@@ -2,7 +2,7 @@
 local AutoCastPerfect = {}
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualUser = game:GetService("VirtualUser") -- swapped in!
+local VirtualUser = game:GetService("VirtualUser")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
@@ -14,12 +14,6 @@ local updateChargeRE = ReplicatedStorage:WaitForChild("Packages")
     :WaitForChild("sleitnick_net@0.2.0")
     :WaitForChild("net")
     :WaitForChild("RE/UpdateChargeState")
-
--- Utility: screen bottom-right
-local function getScreenBottomRight()
-    local viewportSize = workspace.CurrentCamera.ViewportSize
-    return viewportSize.X - 1, viewportSize.Y - 1
-end
 
 -- Wait for UpdateChargeState with 6s timeout
 local function waitForUpdateCharge(timeout)
@@ -39,6 +33,7 @@ local function waitForUpdateCharge(timeout)
         task.wait(0.05)
     end
 
+    -- Disconnect in case timeout occurred
     if conn then
         conn:Disconnect()
         conn = nil
@@ -60,39 +55,45 @@ local function castCycle()
     local timeout = 8
     local startTime = tick()
 
-    -- Hold mouse down at start (VirtualUser)
+    -- Hold mouse down at start (VirtualUser injection)
     VirtualUser:CaptureController()
     VirtualUser:Button1Down(Vector2.new())
     print("[AutoCastPerfect] Mouse held down for new cast cycle")
 
-    -- PropertyChangedSignal for bar size
     local cycleDone = false
-    local connection
-    connection = bar:GetPropertyChangedSignal("Size"):Connect(function()
+    local conn
+
+    -- Listen for Size property changes instead of looping
+    conn = bar:GetPropertyChangedSignal("Size"):Connect(function()
         if not running or cycleDone then return end
 
         local barScaleY = bar.Size.Y.Scale
         if barScaleY >= 0.93 then
-            -- Release mouse
             VirtualUser:Button1Up(Vector2.new())
-            print("[AutoCastPerfect] Mouse released! Bar scale Y:", barScaleY)
+            print(string.format("[AutoCastPerfect] Mouse released! Bar scale Y: %.10f", barScaleY))
             cycleDone = true
-            if connection then connection:Disconnect() connection = nil end
+            if conn then conn:Disconnect() conn = nil end
         end
     end)
 
-    -- Timeout safety
-    task.delay(timeout, function()
-        if not running or cycleDone then return end
-        VirtualUser:Button1Up(Vector2.new())
-        print("[AutoCastPerfect] Timeout reached, releasing mouse and starting next cycle")
-        cycleDone = true
-        if connection then connection:Disconnect() connection = nil end
+    -- Timeout safeguard
+    task.spawn(function()
+        while running and not cycleDone and (tick() - startTime < timeout) do
+            task.wait(0.05)
+        end
+        if not cycleDone and running then
+            VirtualUser:Button1Up(Vector2.new())
+            print("[AutoCastPerfect] Timeout reached, releasing mouse and starting next cycle")
+            cycleDone = true
+            if conn then conn:Disconnect() conn = nil end
+        end
     end)
 
+    -- Wait until cycle done
     repeat task.wait() until cycleDone or not running
     if not running then return end
 
+    -- Wait for UpdateChargeState before starting next cycle
     waitForUpdateCharge(timeout)
 end
 
@@ -118,7 +119,7 @@ function AutoCastPerfect.Stop()
     if not running then return end
     running = false
 
-    -- Release mouse just in case
+    -- Release mouse (just in case still held)
     VirtualUser:Button1Up(Vector2.new())
     print("[AutoCastPerfect] Stopped")
 end
