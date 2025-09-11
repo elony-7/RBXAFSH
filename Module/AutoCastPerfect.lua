@@ -60,7 +60,7 @@ local function castCycle()
     local chargeGui = player:WaitForChild("PlayerGui"):WaitForChild("Charge")
     local bar = chargeGui:WaitForChild("Main"):WaitForChild("CanvasGroup"):WaitForChild("Bar")
     local lastCheck = 0
-    local checkInterval = 0.5
+    local checkInterval = 0.100
     local timeout = 8
     local startTime = tick()
 
