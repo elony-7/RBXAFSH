@@ -15,8 +15,8 @@ local updateChargeRE = ReplicatedStorage:WaitForChild("Packages")
     :WaitForChild("net")
     :WaitForChild("RE/UpdateChargeState")
 
--- Utility: screen corner (bottom-right)
-local function getScreenCorner()
+-- Utility: screen center (now bottom-right)
+local function getScreenCenter()
     local viewportSize = workspace.CurrentCamera.ViewportSize
     return viewportSize.X - 1, viewportSize.Y - 1
 end
@@ -56,47 +56,55 @@ end
 local function castCycle()
     if not running then return end
 
-    local clickX, clickY = getScreenCorner()
+    local centerX, centerY = getScreenCenter()
     local chargeGui = player:WaitForChild("PlayerGui"):WaitForChild("Charge")
     local bar = chargeGui:WaitForChild("Main"):WaitForChild("CanvasGroup"):WaitForChild("Bar")
+    local lastCheck = 0
+    local checkInterval = 0.100
     local timeout = 8
     local startTime = tick()
 
     -- Hold mouse down at start
-    VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, true, game, 0)
+    VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, true, game, 0)
     print("[AutoCastPerfect] Mouse held down for new cast cycle")
 
+    -- RenderStepped loop for this cycle
+    local connection
     local cycleDone = false
-    local conn
+    connection = RunService.RenderStepped:Connect(function(delta)
+        if not running or cycleDone then
+            if connection then connection:Disconnect() end
+            return
+        end
 
-    -- Listen for Size property changes instead of looping
-    conn = bar:GetPropertyChangedSignal("Size"):Connect(function()
-        if not running or cycleDone then return end
+        lastCheck = lastCheck + delta
+        if lastCheck < checkInterval then return end
+        lastCheck = 0
 
         local barScaleY = bar.Size.Y.Scale
-        if barScaleY >= 0.9 then
-            VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
-            print(string.format("[AutoCastPerfect] Mouse released! Bar scale Y: %.10f", barScaleY))
-            cycleDone = true
-            if conn then conn:Disconnect() conn = nil end
-        end
-    end)
+        local firstDecimal = math.floor((barScaleY * 10) % 10)
 
-    -- Timeout safeguard
-    task.spawn(function()
-        while running and not cycleDone and (tick() - startTime < timeout) do
-            task.wait(0.05)
+        -- Release mouse on perfect bar
+        if firstDecimal == 9 then
+            VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, false, game, 0)
+            print("[AutoCastPerfect] Mouse released! Bar scale Y:", barScaleY)
+            cycleDone = true
+            if connection then connection:Disconnect() connection = nil end
+            return
         end
-        if not cycleDone and running then
-            VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
+
+        -- Timeout check
+        if tick() - startTime >= timeout then
+            VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, false, game, 0)
             print("[AutoCastPerfect] Timeout reached, releasing mouse and starting next cycle")
             cycleDone = true
-            if conn then conn:Disconnect() conn = nil end
+            if connection then connection:Disconnect() connection = nil end
+            return
         end
     end)
 
     -- Wait until cycle done
-    repeat task.wait() until cycleDone or not running
+    repeat task.wait(0.00) until cycleDone or not running
     if not running then return end
 
     -- Wait for UpdateChargeState before starting next cycle
@@ -126,8 +134,8 @@ function AutoCastPerfect.Stop()
     running = false
 
     -- Release mouse
-    local clickX, clickY = getScreenCorner()
-    VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
+    local centerX, centerY = getScreenCenter()
+    VirtualInput:SendMouseButtonEvent(centerX, centerY, 0, false, game, 0)
     print("[AutoCastPerfect] Stopped")
 end
 
