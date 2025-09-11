@@ -59,7 +59,7 @@ local function castCycle()
     local clickX, clickY = getScreenCorner()
     local chargeGui = player:WaitForChild("PlayerGui"):WaitForChild("Charge")
     local bar = chargeGui:WaitForChild("Main"):WaitForChild("CanvasGroup"):WaitForChild("Bar")
-    local timeout = 5
+    local timeout = 6
     local startTime = tick()
 
     -- Hold mouse down at start
