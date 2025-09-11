@@ -15,11 +15,10 @@ local updateChargeRE = ReplicatedStorage:WaitForChild("Packages")
     :WaitForChild("net")
     :WaitForChild("RE/UpdateChargeState")
 
--- Utility: screen center (now returns bottom-right inset coordinates)
+-- Utility: screen center (now bottom-right)
 local function getScreenCenter()
     local viewportSize = workspace.CurrentCamera.ViewportSize
-    -- return bottom-right (inset by 5 pixels to avoid edge/off-screen issues)
-    return viewportSize.X - 5, viewportSize.Y - 5
+    return viewportSize.X - 1, viewportSize.Y - 1
 end
 
 -- Wait for UpdateChargeState with 6s timeout
