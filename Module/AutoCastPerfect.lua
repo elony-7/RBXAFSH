@@ -23,7 +23,7 @@ end
 
 -- Wait for UpdateChargeState with 6s timeout
 local function waitForUpdateCharge(timeout)
-    timeout = timeout or 6
+    timeout = timeout or 1
     local fired = false
     local conn
     conn = updateChargeRE.OnClientEvent:Connect(function()
