@@ -2,7 +2,7 @@
 local AutoCastPerfect = {}
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualUser = game:GetService("VirtualUser")
+local VirtualInput = game:GetService("VirtualInputManager")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
@@ -14,6 +14,12 @@ local updateChargeRE = ReplicatedStorage:WaitForChild("Packages")
     :WaitForChild("sleitnick_net@0.2.0")
     :WaitForChild("net")
     :WaitForChild("RE/UpdateChargeState")
+
+-- Utility: screen corner (bottom-right)
+local function getScreenCorner()
+    local viewportSize = workspace.CurrentCamera.ViewportSize
+    return viewportSize.X - 1, viewportSize.Y - 1
+end
 
 -- Wait for UpdateChargeState with 6s timeout
 local function waitForUpdateCharge(timeout)
@@ -50,14 +56,14 @@ end
 local function castCycle()
     if not running then return end
 
+    local clickX, clickY = getScreenCorner()
     local chargeGui = player:WaitForChild("PlayerGui"):WaitForChild("Charge")
     local bar = chargeGui:WaitForChild("Main"):WaitForChild("CanvasGroup"):WaitForChild("Bar")
     local timeout = 8
     local startTime = tick()
 
-    -- Hold mouse down at start (VirtualUser injection)
-    VirtualUser:CaptureController()
-    VirtualUser:Button1Down(Vector2.new())
+    -- Hold mouse down at start
+    VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, true, game, 0)
     print("[AutoCastPerfect] Mouse held down for new cast cycle")
 
     local cycleDone = false
@@ -69,7 +75,7 @@ local function castCycle()
 
         local barScaleY = bar.Size.Y.Scale
         if barScaleY >= 0.93 then
-            VirtualUser:Button1Up(Vector2.new())
+            VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
             print(string.format("[AutoCastPerfect] Mouse released! Bar scale Y: %.10f", barScaleY))
             cycleDone = true
             if conn then conn:Disconnect() conn = nil end
@@ -82,7 +88,7 @@ local function castCycle()
             task.wait(0.05)
         end
         if not cycleDone and running then
-            VirtualUser:Button1Up(Vector2.new())
+            VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
             print("[AutoCastPerfect] Timeout reached, releasing mouse and starting next cycle")
             cycleDone = true
             if conn then conn:Disconnect() conn = nil end
@@ -119,8 +125,9 @@ function AutoCastPerfect.Stop()
     if not running then return end
     running = false
 
-    -- Release mouse (just in case still held)
-    VirtualUser:Button1Up(Vector2.new())
+    -- Release mouse
+    local clickX, clickY = getScreenCorner()
+    VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
     print("[AutoCastPerfect] Stopped")
 end
 
