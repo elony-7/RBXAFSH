@@ -2,7 +2,7 @@
 local AutoCastPerfect = {}
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualInput = game:GetService("VirtualInputManager")
+local VirtualUser = game:GetService("VirtualUser") -- swapped in!
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
@@ -15,8 +15,8 @@ local updateChargeRE = ReplicatedStorage:WaitForChild("Packages")
     :WaitForChild("net")
     :WaitForChild("RE/UpdateChargeState")
 
--- Utility: screen corner (bottom-right)
-local function getScreenCorner()
+-- Utility: screen bottom-right
+local function getScreenBottomRight()
     local viewportSize = workspace.CurrentCamera.ViewportSize
     return viewportSize.X - 1, viewportSize.Y - 1
 end
@@ -39,7 +39,6 @@ local function waitForUpdateCharge(timeout)
         task.wait(0.05)
     end
 
-    -- Disconnect in case timeout occurred
     if conn then
         conn:Disconnect()
         conn = nil
@@ -56,50 +55,44 @@ end
 local function castCycle()
     if not running then return end
 
-    local clickX, clickY = getScreenCorner()
     local chargeGui = player:WaitForChild("PlayerGui"):WaitForChild("Charge")
     local bar = chargeGui:WaitForChild("Main"):WaitForChild("CanvasGroup"):WaitForChild("Bar")
     local timeout = 8
     local startTime = tick()
 
-    -- Hold mouse down at start
-    VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, true, game, 0)
+    -- Hold mouse down at start (VirtualUser)
+    VirtualUser:CaptureController()
+    VirtualUser:Button1Down(Vector2.new())
     print("[AutoCastPerfect] Mouse held down for new cast cycle")
 
+    -- PropertyChangedSignal for bar size
     local cycleDone = false
-    local conn
-
-    -- Listen for Size property changes instead of looping
-    conn = bar:GetPropertyChangedSignal("Size"):Connect(function()
+    local connection
+    connection = bar:GetPropertyChangedSignal("Size"):Connect(function()
         if not running or cycleDone then return end
 
         local barScaleY = bar.Size.Y.Scale
         if barScaleY >= 0.93 then
-            VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
-            print(string.format("[AutoCastPerfect] Mouse released! Bar scale Y: %.10f", barScaleY))
+            -- Release mouse
+            VirtualUser:Button1Up(Vector2.new())
+            print("[AutoCastPerfect] Mouse released! Bar scale Y:", barScaleY)
             cycleDone = true
-            if conn then conn:Disconnect() conn = nil end
+            if connection then connection:Disconnect() connection = nil end
         end
     end)
 
-    -- Timeout safeguard
-    task.spawn(function()
-        while running and not cycleDone and (tick() - startTime < timeout) do
-            task.wait(0.05)
-        end
-        if not cycleDone and running then
-            VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
-            print("[AutoCastPerfect] Timeout reached, releasing mouse and starting next cycle")
-            cycleDone = true
-            if conn then conn:Disconnect() conn = nil end
-        end
+    -- Timeout safety
+    task.delay(timeout, function()
+        if not running or cycleDone then return end
+        VirtualUser:Button1Up(Vector2.new())
+        print("[AutoCastPerfect] Timeout reached, releasing mouse and starting next cycle")
+        cycleDone = true
+        if connection then connection:Disconnect() connection = nil end
     end)
 
-    -- Wait until cycle done
     repeat task.wait() until cycleDone or not running
     if not running then return end
 
-    -- Wait for UpdateChargeState before starting next cycle
     waitForUpdateCharge(timeout)
 end
 
@@ -125,9 +118,8 @@ function AutoCastPerfect.Stop()
     if not running then return end
     running = false
 
-    -- Release mouse
-    local clickX, clickY = getScreenCorner()
-    VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
+    -- Release mouse just in case
+    VirtualUser:Button1Up(Vector2.new())
     print("[AutoCastPerfect] Stopped")
 end
 
