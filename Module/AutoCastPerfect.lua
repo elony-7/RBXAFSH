@@ -74,7 +74,7 @@ local function castCycle()
         if not running or cycleDone then return end
 
         local barScaleY = bar.Size.Y.Scale
-        if barScaleY >= 0.9 then
+        if barScaleY >= 0.93 then
             VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
             print(string.format("[AutoCastPerfect] Mouse released! Bar scale Y: %.10f", barScaleY))
             cycleDone = true
