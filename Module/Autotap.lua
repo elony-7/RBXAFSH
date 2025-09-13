@@ -1,4 +1,4 @@
--- AutoTap.lua
+-- AutoTap.lua (Debugging arguments)
 local AutoTap = {}
 local Players = game:GetService("Players")
 local VirtualInput = game:GetService("VirtualInputManager")
@@ -52,18 +52,27 @@ local function stopLoop()
 end
 
 -- Hook RemoteEvents
-FishingMinigameChanged.OnClientEvent:Connect(function(state, who)
-    print("[AutoTap] FishingMinigameChanged →", state, who)
+FishingMinigameChanged.OnClientEvent:Connect(function(...)
+    local args = {...}
+    print("[AutoTap] FishingMinigameChanged fired with args:")
+    for i, v in ipairs(args) do
+        print("   Arg", i, "→", v, typeof(v))
+    end
 
-    -- Only start if it's OUR LocalPlayer
-    if who == player and state == "Start" and not running then
+    -- Try to detect "Start"
+    if args[1] == "Start" and not running then
         running = true
         startLoop()
     end
 end)
 
-FishingStopped.OnClientEvent:Connect(function()
-    print("[AutoTap] FishingStopped received")
+FishingStopped.OnClientEvent:Connect(function(...)
+    local args = {...}
+    print("[AutoTap] FishingStopped fired with args:")
+    for i, v in ipairs(args) do
+        print("   Arg", i, "→", v, typeof(v))
+    end
+
     if running then
         stopLoop()
         print("[AutoTap] AutoTap stopped")
