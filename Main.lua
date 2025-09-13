@@ -20,6 +20,7 @@ Notify("Notification", "Script is loading...", 5)
 -- Preload Modules
 --========================
 local AutoFishing = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Autofishing.lua"))()
+local AutoTap = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Autotap.lua"))()
 local AutoReel = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Autoreel.lua"))()
 local AutoCastPerfect = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/AutoCastPerfect.lua"))()
 local TeleportModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/elony-7/RBXAFSH/main/Module/Teleport.lua"))()
@@ -78,6 +79,24 @@ do
             AutoFishing.Stop()
             print("❌ Auto Fishing Perfect DISABLED")
             Notify("❌ Auto Fishing Perfect", "Auto Fishing Perfect DISABLED", 2)
+        end
+    end)
+end
+
+do  --==== Auto Tap Toggle ====
+    FarmTab:AddToggle("AutoTap", {
+        Title = "🎣 Auto Tap",
+        Description = "Automatically taps during the fishing minigame.",
+        Default = false
+    }):OnChanged(function(val)
+        if val then
+            AutoTap.Start()
+            print("✅ Auto Tap ENABLED")
+            Notify("✅ Auto Tap", "Auto Tap ENABLED", 2)
+        else
+            AutoTap.Stop()
+            print("❌ Auto Tap DISABLED")
+            Notify("❌ Auto Tap", "Auto Tap DISABLED", 2)
         end
     end)
 end
