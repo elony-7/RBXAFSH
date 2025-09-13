@@ -1,4 +1,4 @@
--- AutoTap.lua
+-- AutoTap.lua (with debug prints)
 local AutoTap = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -18,12 +18,16 @@ local FishingStopped = net:WaitForChild("RE/FishingStopped")
 -- Perform one "tap" using the game's function
 local function doTap()
     if _G.confirmFishingInput then
+        print("[AutoTap] ConfirmFishingInput called")
         _G.confirmFishingInput()
+    else
+        warn("[AutoTap] _G.confirmFishingInput not available")
     end
 end
 
 -- Loop while running
 local function startLoop()
+    print("[AutoTap] Tap loop started")
     tapLoop = task.spawn(function()
         while running do
             doTap()
@@ -34,42 +38,53 @@ end
 
 -- Stop the loop
 local function stopLoop()
+    print("[AutoTap] Tap loop stopping...")
     running = false
 end
 
 -- Hook RemoteEvents
 FishingMinigameChanged.OnClientEvent:Connect(function(state)
+    print("[AutoTap] FishingMinigameChanged received →", state)
     if state == "Start" then
         if not running then
             running = true
+            print("[AutoTap] State = Start → Beginning AutoTap")
             startLoop()
-            print("[AutoTap] Fishing started → AutoTap running")
+        else
+            print("[AutoTap] Already running, ignoring Start")
         end
+    else
+        print("[AutoTap] Unhandled state:", state)
     end
 end)
 
 FishingStopped.OnClientEvent:Connect(function()
+    print("[AutoTap] FishingStopped received")
     if running then
         stopLoop()
-        print("[AutoTap] Fishing stopped → AutoTap stopped")
+        print("[AutoTap] AutoTap stopped by FishingStopped event")
+    else
+        print("[AutoTap] Was not running when FishingStopped fired")
     end
 end)
 
 -- API
 function AutoTap.Start()
     if running then
-        warn("[AutoTap] Already running")
+        warn("[AutoTap] Start called but already running")
         return
     end
     running = true
+    print("[AutoTap] Force started manually")
     startLoop()
-    print("[AutoTap] Force started")
 end
 
 function AutoTap.Stop()
     if running then
+        print("[AutoTap] Force stop called")
         stopLoop()
-        print("[AutoTap] Force stopped")
+    else
+        print("[AutoTap] Stop called but already stopped")
     end
 end
 
