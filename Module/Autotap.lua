@@ -1,4 +1,4 @@
--- AutoTap.lua (with debug prints)
+-- AutoTap.lua (safe _G.confirmFishingInput detection)
 local AutoTap = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -15,13 +15,13 @@ local net = ReplicatedStorage:WaitForChild("Packages")
 local FishingMinigameChanged = net:WaitForChild("RE/FishingMinigameChanged")
 local FishingStopped = net:WaitForChild("RE/FishingStopped")
 
--- Perform one "tap" using the game's function
+-- Perform one "tap"
 local function doTap()
     if _G.confirmFishingInput then
         print("[AutoTap] ConfirmFishingInput called")
         _G.confirmFishingInput()
     else
-        warn("[AutoTap] _G.confirmFishingInput not available")
+        warn("[AutoTap] confirmFishingInput not available yet, waiting...")
     end
 end
 
@@ -47,9 +47,23 @@ FishingMinigameChanged.OnClientEvent:Connect(function(state)
     print("[AutoTap] FishingMinigameChanged received →", state)
     if state == "Start" then
         if not running then
-            running = true
-            print("[AutoTap] State = Start → Beginning AutoTap")
-            startLoop()
+            -- Wait until confirmFishingInput exists
+            task.spawn(function()
+                local waited = 0
+                while not _G.confirmFishingInput and waited < 5 do
+                    print("[AutoTap] Waiting for confirmFishingInput...")
+                    task.wait(0.2)
+                    waited += 0.2
+                end
+
+                if _G.confirmFishingInput then
+                    running = true
+                    print("[AutoTap] confirmFishingInput found → Starting AutoTap")
+                    startLoop()
+                else
+                    warn("[AutoTap] confirmFishingInput never appeared (timeout)")
+                end
+            end)
         else
             print("[AutoTap] Already running, ignoring Start")
         end
