@@ -21,29 +21,40 @@ local function tapOnce()
     VirtualInput:SendMouseButtonEvent(x, y, 0, false, game, 0)
 end
 
--- Check if Fishing.Main GUI is active
-local function isFishingActive()
-    local gui = player:FindFirstChild("PlayerGui")
-    if not gui then return false end
-
-    local fishing = gui:FindFirstChild("Fishing")
-    if not fishing then return false end
-
-    local main = fishing:FindFirstChild("Main")
-    if not main then return false end
-
-    return main.Visible == true -- tap only when visible
+-- Start tapping loop
+local function startTapping(mainGui)
+    if connHeartbeat then connHeartbeat:Disconnect() end
+    connHeartbeat = RunService.Heartbeat:Connect(function()
+        if running and mainGui and mainGui.Visible then
+            tapOnce()
+        end
+    end)
 end
 
--- Main loop tied to Heartbeat
-local function mainLoop()
-    if connHeartbeat then connHeartbeat:Disconnect() end
+-- Main watcher loop
+local function watcherLoop()
+    task.spawn(function()
+        while running do
+            local fishing = player:WaitForChild("PlayerGui"):FindFirstChild("Fishing")
 
-    connHeartbeat = RunService.Heartbeat:Connect(function()
-        if not running then return end
+            if fishing then
+                local main = fishing:WaitForChild("Main")
 
-        if isFishingActive() then
-            tapOnce()
+                -- Wait until it's visible
+                main:GetPropertyChangedSignal("Visible"):Wait()
+                while running and main.Visible do
+                    startTapping(main)
+                    task.wait(0.1) -- small wait so it doesn't lock loop
+                end
+
+                -- Stop tapping when it's gone/hidden
+                if connHeartbeat then
+                    connHeartbeat:Disconnect()
+                    connHeartbeat = nil
+                end
+            else
+                task.wait(0.5) -- wait before checking again
+            end
         end
     end)
 end
@@ -54,7 +65,7 @@ function AutoTap.Start()
         return
     end
     running = true
-    mainLoop()
+    watcherLoop()
     print("[AutoTap] Started")
 end
 
