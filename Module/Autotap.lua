@@ -1,85 +1,76 @@
 -- AutoTap.lua
 local AutoTap = {}
-local Players = game:GetService("Players")
-local VirtualInput = game:GetService("VirtualInputManager")
-local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local player = Players.LocalPlayer
 local running = false
-local connHeartbeat
+local tapLoop
 
--- Utility: bottom-right corner
-local function getScreenCorner()
-    local viewportSize = workspace.CurrentCamera.ViewportSize
-    return viewportSize.X - 1, viewportSize.Y - 1
+-- Net package reference
+local net = ReplicatedStorage:WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+
+-- RemoteEvents
+local FishingMinigameChanged = net:WaitForChild("RE/FishingMinigameChanged")
+local FishingStopped = net:WaitForChild("RE/FishingStopped")
+
+-- Perform one "tap" using the game's function
+local function doTap()
+    if _G.confirmFishingInput then
+        _G.confirmFishingInput()
+    end
 end
 
--- Perform instant tap
-local function tapOnce()
-    local x, y = getScreenCorner()
-    VirtualInput:SendMouseButtonEvent(x, y, 0, true, game, 0)
-    VirtualInput:SendMouseButtonEvent(x, y, 0, false, game, 0)
-end
-
--- Start tapping loop
-local function startTapping(mainGui)
-    if connHeartbeat then connHeartbeat:Disconnect() end
-    connHeartbeat = RunService.Heartbeat:Connect(function()
-        if running and mainGui and mainGui.Parent then
-            tapOnce()
-        end
-    end)
-end
-
--- Main watcher loop
-local function watcherLoop()
-    task.spawn(function()
+-- Loop while running
+local function startLoop()
+    tapLoop = task.spawn(function()
         while running do
-            local fishing = player:WaitForChild("PlayerGui"):FindFirstChild("Fishing")
-
-            if fishing then
-                local main = fishing:FindFirstChild("Main")
-
-                if main and main.Parent then
-                    print("[AutoTap] Fishing.Main detected, starting taps")
-                    startTapping(main)
-
-                    -- wait until it's destroyed or removed
-                    main.AncestryChanged:Wait()
-
-                    print("[AutoTap] Fishing.Main removed, stopping taps")
-                    if connHeartbeat then
-                        connHeartbeat:Disconnect()
-                        connHeartbeat = nil
-                    end
-                else
-                    task.wait(0.2)
-                end
-            else
-                task.wait(0.5)
-            end
+            doTap()
+            task.wait(0.15) -- safe interval
         end
     end)
 end
 
+-- Stop the loop
+local function stopLoop()
+    running = false
+end
+
+-- Hook RemoteEvents
+FishingMinigameChanged.OnClientEvent:Connect(function(state)
+    if state == "Start" then
+        if not running then
+            running = true
+            startLoop()
+            print("[AutoTap] Fishing started → AutoTap running")
+        end
+    end
+end)
+
+FishingStopped.OnClientEvent:Connect(function()
+    if running then
+        stopLoop()
+        print("[AutoTap] Fishing stopped → AutoTap stopped")
+    end
+end)
+
+-- API
 function AutoTap.Start()
     if running then
-        print("[AutoTap] Already running")
+        warn("[AutoTap] Already running")
         return
     end
     running = true
-    watcherLoop()
-    print("[AutoTap] Started")
+    startLoop()
+    print("[AutoTap] Force started")
 end
 
 function AutoTap.Stop()
-    if not running then return end
-    running = false
-    if connHeartbeat then
-        connHeartbeat:Disconnect()
-        connHeartbeat = nil
+    if running then
+        stopLoop()
+        print("[AutoTap] Force stopped")
     end
-    print("[AutoTap] Stopped")
 end
 
 return AutoTap
