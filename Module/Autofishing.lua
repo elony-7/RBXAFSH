@@ -97,7 +97,7 @@ function AutoFishing.Start()
                 log("🎮 Starting fishing minigame...") -- log immediately before sending
 
                 local success, result = pcall(function()
-                    return startRF:InvokeServer(-1.2379989624023438, 1)
+                    return startRF:InvokeServer(1, 1)
                 end)
 
                 if success then
