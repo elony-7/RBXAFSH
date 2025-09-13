@@ -83,7 +83,8 @@ do
     end)
 end
 
-do  --==== Auto Tap Toggle ====
+ --==== Auto Tap Toggle ====
+do
     FarmTab:AddToggle("AutoTap", {
         Title = "🎣 Auto Tap",
         Description = "Automatically taps during the fishing minigame.",

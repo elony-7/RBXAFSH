@@ -1,18 +1,12 @@
--- AutoTap.lua
-local AutoTap = {}
+-- AutoTapInstant.lua
+local AutoTapInstant = {}
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualInput = game:GetService("VirtualInputManager")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local running = false
-local tapping = false
-local tapLoop
-
--- RemoteEvents
-local fishingEvents = ReplicatedStorage:WaitForChild("RE")
-local fishingMinigameChanged = fishingEvents:WaitForChild("FishingMinigameChanged")
-local fishingStopped = fishingEvents:WaitForChild("FishingStopped")
+local connHeartbeat
 
 -- Utility: bottom-right corner
 local function getScreenCorner()
@@ -27,54 +21,51 @@ local function tapOnce()
     VirtualInput:SendMouseButtonEvent(x, y, 0, false, game, 0)
 end
 
--- Start tapping loop
-local function startTapping()
-    if tapping then return end
-    tapping = true
-    tapLoop = task.spawn(function()
-        while running and tapping do
+-- Check if Fishing.Main GUI is active
+local function isFishingActive()
+    local gui = player:FindFirstChild("PlayerGui")
+    if not gui then return false end
+
+    local fishing = gui:FindFirstChild("Fishing")
+    if not fishing then return false end
+
+    local main = fishing:FindFirstChild("Main")
+    if not main then return false end
+
+    return main.Visible == true -- only tap when visible
+end
+
+-- Main loop tied to Heartbeat
+local function mainLoop()
+    if connHeartbeat then connHeartbeat:Disconnect() end
+
+    connHeartbeat = RunService.Heartbeat:Connect(function()
+        if not running then return end
+
+        if isFishingActive() then
             tapOnce()
-            task.wait(0.15) -- safe interval
         end
     end)
-    print("[AutoTap] Started tapping")
 end
 
--- Stop tapping loop
-local function stopTapping()
-    tapping = false
-    print("[AutoTap] Stopped tapping")
-end
-
--- Start module
-function AutoTap.Start()
+function AutoTapInstant.Start()
     if running then
-        warn("[AutoTap] Already running")
+        print("[AutoTapInstant] Already running")
         return
     end
     running = true
-
-    -- Hook into fishing events
-    fishingMinigameChanged.OnClientEvent:Connect(function(state)
-        if running and state then
-            startTapping()
-        end
-    end)
-
-    fishingStopped.OnClientEvent:Connect(function()
-        if running then
-            stopTapping()
-        end
-    end)
-
-    print("[AutoTap] Listening for fishing events...")
+    mainLoop()
+    print("[AutoTapInstant] Started")
 end
 
--- Stop module
-function AutoTap.Stop()
+function AutoTapInstant.Stop()
+    if not running then return end
     running = false
-    stopTapping()
-    print("[AutoTap] Fully stopped")
+    if connHeartbeat then
+        connHeartbeat:Disconnect()
+        connHeartbeat = nil
+    end
+    print("[AutoTapInstant] Stopped")
 end
 
-return AutoTap
+return AutoTapInstant
