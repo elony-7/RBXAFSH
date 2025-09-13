@@ -25,7 +25,7 @@ end
 local function startTapping(mainGui)
     if connHeartbeat then connHeartbeat:Disconnect() end
     connHeartbeat = RunService.Heartbeat:Connect(function()
-        if running and mainGui and mainGui.Visible then
+        if running and mainGui and mainGui.Parent then
             tapOnce()
         end
     end)
@@ -38,22 +38,25 @@ local function watcherLoop()
             local fishing = player:WaitForChild("PlayerGui"):FindFirstChild("Fishing")
 
             if fishing then
-                local main = fishing:WaitForChild("Main")
+                local main = fishing:FindFirstChild("Main")
 
-                -- Wait until it's visible
-                main:GetPropertyChangedSignal("Visible"):Wait()
-                while running and main.Visible do
+                if main and main.Parent then
+                    print("[AutoTap] Fishing.Main detected, starting taps")
                     startTapping(main)
-                    task.wait(0.1) -- small wait so it doesn't lock loop
-                end
 
-                -- Stop tapping when it's gone/hidden
-                if connHeartbeat then
-                    connHeartbeat:Disconnect()
-                    connHeartbeat = nil
+                    -- wait until it's destroyed or removed
+                    main.AncestryChanged:Wait()
+
+                    print("[AutoTap] Fishing.Main removed, stopping taps")
+                    if connHeartbeat then
+                        connHeartbeat:Disconnect()
+                        connHeartbeat = nil
+                    end
+                else
+                    task.wait(0.2)
                 end
             else
-                task.wait(0.5) -- wait before checking again
+                task.wait(0.5)
             end
         end
     end)
