@@ -1,7 +1,10 @@
--- AutoTap.lua (safe _G.confirmFishingInput detection)
+-- AutoTap.lua (RemoteEvent-driven)
 local AutoTap = {}
+local Players = game:GetService("Players")
+local VirtualInput = game:GetService("VirtualInputManager")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local player = Players.LocalPlayer
 local running = false
 local tapLoop
 
@@ -15,60 +18,45 @@ local net = ReplicatedStorage:WaitForChild("Packages")
 local FishingMinigameChanged = net:WaitForChild("RE/FishingMinigameChanged")
 local FishingStopped = net:WaitForChild("RE/FishingStopped")
 
--- Perform one "tap"
-local function doTap()
-    if _G.confirmFishingInput then
-        print("[AutoTap] ConfirmFishingInput called")
-        _G.confirmFishingInput()
-    else
-        warn("[AutoTap] confirmFishingInput not available yet, waiting...")
-    end
+-- Utility: bottom-right corner
+local function getScreenCorner()
+    local viewportSize = workspace.CurrentCamera.ViewportSize
+    return viewportSize.X - 1, viewportSize.Y - 1
 end
 
--- Loop while running
+-- Perform instant tap
+local function tapOnce()
+    local x, y = getScreenCorner()
+    VirtualInput:SendMouseButtonEvent(x, y, 0, true, game, 0)
+    VirtualInput:SendMouseButtonEvent(x, y, 0, false, game, 0)
+    print("[AutoTap] Tap sent")
+end
+
+-- Loop
 local function startLoop()
+    if tapLoop then return end
     print("[AutoTap] Tap loop started")
     tapLoop = task.spawn(function()
         while running do
-            doTap()
-            task.wait(0.15) -- safe interval
+            tapOnce()
+            task.wait(0.15) -- adjust tap speed here
         end
     end)
 end
 
--- Stop the loop
+-- Stop loop
 local function stopLoop()
     print("[AutoTap] Tap loop stopping...")
     running = false
+    tapLoop = nil
 end
 
 -- Hook RemoteEvents
 FishingMinigameChanged.OnClientEvent:Connect(function(state)
-    print("[AutoTap] FishingMinigameChanged received →", state)
-    if state == "Start" then
-        if not running then
-            -- Wait until confirmFishingInput exists
-            task.spawn(function()
-                local waited = 0
-                while not _G.confirmFishingInput and waited < 5 do
-                    print("[AutoTap] Waiting for confirmFishingInput...")
-                    task.wait(0.2)
-                    waited += 0.2
-                end
-
-                if _G.confirmFishingInput then
-                    running = true
-                    print("[AutoTap] confirmFishingInput found → Starting AutoTap")
-                    startLoop()
-                else
-                    warn("[AutoTap] confirmFishingInput never appeared (timeout)")
-                end
-            end)
-        else
-            print("[AutoTap] Already running, ignoring Start")
-        end
-    else
-        print("[AutoTap] Unhandled state:", state)
+    print("[AutoTap] FishingMinigameChanged →", state)
+    if state == "Start" and not running then
+        running = true
+        startLoop()
     end
 end)
 
@@ -76,29 +64,27 @@ FishingStopped.OnClientEvent:Connect(function()
     print("[AutoTap] FishingStopped received")
     if running then
         stopLoop()
-        print("[AutoTap] AutoTap stopped by FishingStopped event")
-    else
-        print("[AutoTap] Was not running when FishingStopped fired")
+        print("[AutoTap] AutoTap stopped")
     end
 end)
 
 -- API
 function AutoTap.Start()
     if running then
-        warn("[AutoTap] Start called but already running")
+        warn("[AutoTap] Already running")
         return
     end
     running = true
-    print("[AutoTap] Force started manually")
     startLoop()
+    print("[AutoTap] Force started manually")
 end
 
 function AutoTap.Stop()
     if running then
-        print("[AutoTap] Force stop called")
         stopLoop()
+        print("[AutoTap] Force stopped manually")
     else
-        print("[AutoTap] Stop called but already stopped")
+        print("[AutoTap] Stop called but not running")
     end
 end
 
