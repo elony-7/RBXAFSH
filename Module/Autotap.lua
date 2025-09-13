@@ -1,4 +1,4 @@
--- AutoTap.lua (RemoteEvent-driven)
+-- AutoTap.lua
 local AutoTap = {}
 local Players = game:GetService("Players")
 local VirtualInput = game:GetService("VirtualInputManager")
@@ -39,7 +39,7 @@ local function startLoop()
     tapLoop = task.spawn(function()
         while running do
             tapOnce()
-            task.wait(0.15) -- adjust tap speed here
+            task.wait(0.15)
         end
     end)
 end
@@ -52,9 +52,11 @@ local function stopLoop()
 end
 
 -- Hook RemoteEvents
-FishingMinigameChanged.OnClientEvent:Connect(function(state)
-    print("[AutoTap] FishingMinigameChanged →", state)
-    if state == "Start" and not running then
+FishingMinigameChanged.OnClientEvent:Connect(function(state, who)
+    print("[AutoTap] FishingMinigameChanged →", state, who)
+
+    -- Only start if it's OUR LocalPlayer
+    if who == player and state == "Start" and not running then
         running = true
         startLoop()
     end
