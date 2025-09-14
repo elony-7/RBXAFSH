@@ -1,37 +1,30 @@
--- AutoTap.lua
+-- Autotap.lua
 local AutoTap = {}
+
+-- Services
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local VirtualInput = game:GetService("VirtualInputManager")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 
+-- References
 local player = Players.LocalPlayer
+local gui = player:WaitForChild("PlayerGui"):WaitForChild("Fishing"):WaitForChild("Main")
 
--- Network reference for stopping
-local netFolder = ReplicatedStorage:WaitForChild("Packages")
-    :WaitForChild("_Index")
-    :WaitForChild("sleitnick_net@0.2.0")
+local netFolder = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0")
 local net = netFolder:WaitForChild("net")
 local fishingStopped = net:WaitForChild("RE/FishingStopped")
 
 -- State
 local running = false
-local tapThread
+local mainThread
 local stopConn
+local guiDestroyConn
 
--- Bottom-right screen position
-local function getScreenCorner()
-    local viewportSize = workspace.CurrentCamera.ViewportSize
-    return viewportSize.X - 1, viewportSize.Y - 1
-end
-
--- Send a quick tap (mouse down + up)
+-- Function to simulate mouse click
 local function sendTap()
-    local clickX, clickY = getScreenCorner()
-    -- Mouse down
-    VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, true, game, 0)
-    -- Mouse up
-    VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
+    -- Click at position (0,0); you can adjust X,Y if needed
+    VirtualInputManager:SendMouseButtonEvent(0, 0, Enum.UserInputState.Begin, true, game, 0)
+    VirtualInputManager:SendMouseButtonEvent(0, 0, Enum.UserInputState.End, true, game, 0)
 end
 
 -- Start AutoTap
@@ -40,16 +33,29 @@ function AutoTap.Start()
     running = true
     print("[AutoTap] Started")
 
-    -- Persistent tap loop
-    tapThread = task.spawn(function()
+    -- Main loop: wait for GUI to change, tap, then wait again
+    mainThread = task.spawn(function()
         while running do
-            sendTap()
-            task.wait(0.25) -- 250ms interval
+            -- Wait until GUI Y.Scale is not 1.5
+            while gui and gui.Position.Y.Scale == 1.5 and running do
+                task.wait(0.1)
+            end
+
+            -- Start tapping until GUI goes back to 1.5
+            while gui and gui.Position.Y.Scale ~= 1.5 and running do
+                sendTap()
+                task.wait(0.25) -- 250ms tap interval
+            end
         end
     end)
 
-    -- Stop when fishing stops
+    -- Stop when FishingStopped event fires
     stopConn = fishingStopped.OnClientEvent:Connect(function()
+        AutoTap.Stop()
+    end)
+
+    -- Stop if GUI is destroyed
+    guiDestroyConn = gui.Destroying:Connect(function()
         AutoTap.Stop()
     end)
 end
@@ -60,16 +66,17 @@ function AutoTap.Stop()
     running = false
     print("[AutoTap] Stopped")
 
-    -- Ensure mouse is released
-    local clickX, clickY = getScreenCorner()
-    VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
-
     if stopConn then
         stopConn:Disconnect()
         stopConn = nil
     end
 
-    tapThread = nil
+    if guiDestroyConn then
+        guiDestroyConn:Disconnect()
+        guiDestroyConn = nil
+    end
+
+    mainThread = nil
 end
 
 return AutoTap
