@@ -1,30 +1,37 @@
--- Autotap.lua
+-- AutoTap.lua
 local AutoTap = {}
-
--- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
+local VirtualInput = game:GetService("VirtualInputManager")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
-local gui = player:WaitForChild("PlayerGui"):WaitForChild("Fishing"):WaitForChild("Main")
+
+-- Network reference for stopping
+local netFolder = ReplicatedStorage:WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+local net = netFolder:WaitForChild("net")
+local fishingStopped = net:WaitForChild("RE/FishingStopped")
 
 -- State
 local running = false
 local tapThread
-local guiDestroyConn
+local stopConn
 
--- Function to simulate tap at bottom-right
+-- Bottom-right screen position
+local function getScreenCorner()
+    local viewportSize = workspace.CurrentCamera.ViewportSize
+    return viewportSize.X - 1, viewportSize.Y - 1
+end
+
+-- Send a quick tap (mouse down + up)
 local function sendTap()
-    -- Get screen size
-    local screenSize = workspace.CurrentCamera.ViewportSize
-    local tapPosition = Vector2.new(screenSize.X - 10, screenSize.Y - 10) -- bottom-right corner, 10px offset
-
-    -- Find GuiObject under that position
-    local target = UserInputService:GetGuiObjectsAtPosition(tapPosition.X, tapPosition.Y)[1]
-    if target and target:IsA("GuiButton") then
-        target:Activate()
-    end
+    local clickX, clickY = getScreenCorner()
+    -- Mouse down
+    VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, true, game, 0)
+    -- Mouse up
+    VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
 end
 
 -- Start AutoTap
@@ -33,15 +40,16 @@ function AutoTap.Start()
     running = true
     print("[AutoTap] Started")
 
+    -- Persistent tap loop
     tapThread = task.spawn(function()
         while running do
             sendTap()
-            task.wait(0.25) -- 250ms tap interval
+            task.wait(0.25) -- 250ms interval
         end
     end)
 
-    -- Stop if GUI is destroyed
-    guiDestroyConn = gui.Destroying:Connect(function()
+    -- Stop when fishing stops
+    stopConn = fishingStopped.OnClientEvent:Connect(function()
         AutoTap.Stop()
     end)
 end
@@ -52,9 +60,13 @@ function AutoTap.Stop()
     running = false
     print("[AutoTap] Stopped")
 
-    if guiDestroyConn then
-        guiDestroyConn:Disconnect()
-        guiDestroyConn = nil
+    -- Ensure mouse is released
+    local clickX, clickY = getScreenCorner()
+    VirtualInput:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
+
+    if stopConn then
+        stopConn:Disconnect()
+        stopConn = nil
     end
 
     tapThread = nil
