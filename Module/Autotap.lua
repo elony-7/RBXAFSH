@@ -19,6 +19,7 @@ local running = false
 local tapThread
 local stopConn
 local guiDestroyConn
+local tapping = false
 
 -- Function to simulate mouse click
 local function sendTap()
@@ -38,23 +39,25 @@ function AutoTap.Start()
         while running do
             -- Wait while GUI position is 1.5
             while gui and gui.Position.Y.Scale == 1.5 and running do
+                tapping = false
                 task.wait(0.1)
             end
 
-            -- Tap while GUI position is not 1.5
-            while gui and gui.Position.Y.Scale ~= 1.5 and running do
+            -- Start tapping while GUI is not 1.5 and until FishingStopped fires
+            tapping = true
+            while gui and gui.Position.Y.Scale ~= 1.5 and tapping and running do
                 sendTap()
-                task.wait(0.25) -- 250ms tap interval
+                task.wait(0.25)
             end
 
-            -- Small wait to prevent busy looping
+            -- After stopping taps (GUI back to 1.5 or FishingStopped), loop back to waiting
             task.wait(0.1)
         end
     end)
 
-    -- Stop when FishingStopped event fires
+    -- When fishing stops, stop tapping but don't stop the AutoTap loop
     stopConn = fishingStopped.OnClientEvent:Connect(function()
-        AutoTap.Stop()
+        tapping = false
     end)
 
     -- Stop if GUI is destroyed
@@ -63,7 +66,7 @@ function AutoTap.Start()
     end)
 end
 
--- Stop AutoTap
+-- Stop AutoTap completely
 function AutoTap.Stop()
     if not running then return end
     running = false
@@ -80,6 +83,7 @@ function AutoTap.Stop()
     end
 
     tapThread = nil
+    tapping = false
 end
 
 return AutoTap
