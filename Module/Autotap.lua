@@ -9,6 +9,7 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 -- References
 local player = Players.LocalPlayer
 local gui = player:WaitForChild("PlayerGui"):WaitForChild("Fishing"):WaitForChild("Main")
+local fishingButton = gui:WaitForChild("Button") -- adjust if your fishing button has a different name
 
 local netFolder = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0")
 local net = netFolder:WaitForChild("net")
@@ -21,11 +22,15 @@ local stopConn
 local guiDestroyConn
 local tapping = false
 
--- Function to simulate mouse click
+-- Function to simulate left click on the fishing button
 local function sendTap()
-    -- 0 = Begin, 1 = End
-    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Press
-    VirtualInputManager:SendMouseButtonEvent(0, 0, 1, true, game, 0) -- Release
+    if not fishingButton then return end
+
+    local buttonPos = fishingButton.AbsolutePosition + fishingButton.AbsoluteSize/2
+
+    -- Press and release left mouse button immediately
+    VirtualInputManager:SendMouseButtonEvent(buttonPos.X, buttonPos.Y, 0, true, game, 0) -- Begin
+    VirtualInputManager:SendMouseButtonEvent(buttonPos.X, buttonPos.Y, 1, true, game, 0) -- End
 end
 
 -- Start AutoTap
@@ -34,7 +39,7 @@ function AutoTap.Start()
     running = true
     print("[AutoTap] Started")
 
-    -- Listen to FishingStopped event to stop tapping immediately
+    -- Listen to FishingStopped to stop tapping immediately
     stopConn = fishingStopped.OnClientEvent:Connect(function()
         tapping = false
     end)
@@ -60,7 +65,7 @@ function AutoTap.Start()
                 task.wait(0.25)
             end
 
-            -- After stopping taps (FishingStopped fired or GUI back to 1.5), go back to waiting
+            -- After stopping taps, go back to waiting
             tapping = false
             task.wait(0.1)
         end
