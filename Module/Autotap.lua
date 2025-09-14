@@ -3,12 +3,13 @@ local AutoTap = {}
 
 -- Services
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 
 -- References
 local player = Players.LocalPlayer
 local gui = player:WaitForChild("PlayerGui"):WaitForChild("Fishing"):WaitForChild("Main")
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local netFolder = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0")
 local net = netFolder:WaitForChild("net")
 local fishingStopped = net:WaitForChild("RE/FishingStopped")
@@ -16,20 +17,26 @@ local fishingStopped = net:WaitForChild("RE/FishingStopped")
 -- State
 local running = false
 local tapThread
-local guiConn
 local stopConn
+local guiDestroyConn
 
--- Function to send tap
+-- Function to simulate mouse click
 local function sendTap()
-	-- Replace this with actual tap action
-	print("TAP sent")
-	-- Example:
-	-- ReplicatedStorage.TapEvent:FireServer()
+	-- Simulate left mouse button down and up
+	UserInputService.InputBegan:Fire({
+		UserInputType = Enum.UserInputType.MouseButton1,
+		KeyCode = Enum.KeyCode.Unknown,
+		UserInputState = Enum.UserInputState.Begin
+	})
+	UserInputService.InputEnded:Fire({
+		UserInputType = Enum.UserInputType.MouseButton1,
+		KeyCode = Enum.KeyCode.Unknown,
+		UserInputState = Enum.UserInputState.End
+	})
 end
 
--- Start function
+-- Start AutoTap
 function AutoTap.Start()
-    print("this is updated")
 	if running then return end
 	running = true
 	print("[AutoTap] Started")
@@ -40,17 +47,22 @@ function AutoTap.Start()
 			if gui and gui.Size.Y.Scale ~= 1.5 then
 				sendTap()
 			end
-			task.wait(0.25)
+			task.wait(0.25) -- 250ms tap interval
 		end
 	end)
 
-	-- Listen for FishingStopped
+	-- Stop when FishingStopped event fires
 	stopConn = fishingStopped.OnClientEvent:Connect(function()
+		AutoTap.Stop()
+	end)
+
+	-- Stop if GUI is destroyed
+	guiDestroyConn = gui.Destroying:Connect(function()
 		AutoTap.Stop()
 	end)
 end
 
--- Stop function
+-- Stop AutoTap
 function AutoTap.Stop()
 	if not running then return end
 	running = false
@@ -61,7 +73,11 @@ function AutoTap.Stop()
 		stopConn = nil
 	end
 
-	-- Stop loop
+	if guiDestroyConn then
+		guiDestroyConn:Disconnect()
+		guiDestroyConn = nil
+	end
+
 	tapThread = nil
 end
 
