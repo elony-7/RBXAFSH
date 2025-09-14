@@ -22,8 +22,9 @@ local guiDestroyConn
 
 -- Function to simulate mouse click
 local function sendTap()
-    VirtualInputManager:SendMouseButtonEvent(0, 0, Enum.UserInputState.Begin, true, game, 0)
-    VirtualInputManager:SendMouseButtonEvent(0, 0, Enum.UserInputState.End, true, game, 0)
+    -- 0 = Begin, 1 = End
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Press
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 1, true, game, 0) -- Release
 end
 
 -- Start AutoTap
