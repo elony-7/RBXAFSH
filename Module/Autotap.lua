@@ -1,7 +1,9 @@
+-- Autotap.lua
+local AutoTap = {}
+
 --// Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 
 --// References
 local player = Players.LocalPlayer
@@ -11,51 +13,69 @@ local netFolder = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("_Inde
 local net = netFolder:WaitForChild("net")
 local fishingStopped = net:WaitForChild("RE/FishingStopped")
 
---// Auto Tap Control
+--// State
 local running = false
 local tapThread
+local guiConn
+local stopConn
 
--- Function to send a tap
+-- Function to send tap
 local function sendTap()
-	-- put your real tap action here:
+	-- Replace this with actual action
 	print("TAP sent")
-	-- example if it's a RemoteEvent:
-	-- game:GetService("ReplicatedStorage").TapEvent:FireServer()
+	-- Example:
+	-- ReplicatedStorage.TapEvent:FireServer()
 end
 
--- Function to start auto tap
-local function startAutoTap()
+-- Start function
+function AutoTap.Start()
 	if running then return end
 	running = true
-	print("Auto Tap Started")
+	print("[AutoTap] Started")
 
-	-- Run taps every 0.25s in a loop
-	tapThread = task.spawn(function()
-		while running do
-			sendTap()
-			task.wait(0.25) -- 250ms
+	-- Listen for GUI size changes
+	guiConn = gui:GetPropertyChangedSignal("Size"):Connect(function()
+		local yScale = gui.Size.Y.Scale
+		if yScale ~= 1.5 and not tapThread then
+			-- start tapping loop
+			tapThread = task.spawn(function()
+				while running and gui.Size.Y.Scale ~= 1.5 do
+					sendTap()
+					task.wait(0.25) -- 250ms
+				end
+				tapThread = nil
+			end)
+		elseif yScale == 1.5 then
+			-- stop tapping loop
+			if tapThread then
+				tapThread = nil
+			end
 		end
+	end)
+
+	-- Listen for FishingStopped
+	stopConn = fishingStopped.OnClientEvent:Connect(function()
+		AutoTap.Stop()
 	end)
 end
 
--- Function to stop auto tap
-local function stopAutoTap()
+-- Stop function
+function AutoTap.Stop()
 	if not running then return end
 	running = false
-	print("Auto Tap Stopped")
+	print("[AutoTap] Stopped")
+
+	if guiConn then
+		guiConn:Disconnect()
+		guiConn = nil
+	end
+	if stopConn then
+		stopConn:Disconnect()
+		stopConn = nil
+	end
+
+	-- ensure tap loop stops
+	tapThread = nil
 end
 
--- Listen for GUI size changes
-gui:GetPropertyChangedSignal("Size"):Connect(function()
-	local yScale = gui.Size.Y.Scale
-	if yScale ~= 1.5 then
-		startAutoTap()
-	else
-		stopAutoTap()
-	end
-end)
-
--- Also listen for FishingStopped event
-fishingStopped.OnClientEvent:Connect(function()
-	stopAutoTap()
-end)
+return AutoTap
