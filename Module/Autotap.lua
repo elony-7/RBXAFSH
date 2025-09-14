@@ -4,12 +4,13 @@ local AutoTap = {}
 -- Services
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- References
 local player = Players.LocalPlayer
 local gui = player:WaitForChild("PlayerGui"):WaitForChild("Fishing"):WaitForChild("Main")
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local netFolder = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0")
 local net = netFolder:WaitForChild("net")
 local fishingStopped = net:WaitForChild("RE/FishingStopped")
@@ -44,7 +45,7 @@ function AutoTap.Start()
 	-- Persistent tap loop
 	tapThread = task.spawn(function()
 		while running do
-			if gui and gui.Size.Y.Scale ~= 1.5 then
+			if gui and gui.Position.Y.Scale ~= 1.5 then
 				sendTap()
 			end
 			task.wait(0.25) -- 250ms tap interval
