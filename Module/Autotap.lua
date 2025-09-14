@@ -16,13 +16,12 @@ local fishingStopped = net:WaitForChild("RE/FishingStopped")
 
 -- State
 local running = false
-local mainThread
+local tapThread
 local stopConn
 local guiDestroyConn
 
 -- Function to simulate mouse click
 local function sendTap()
-    -- Click at position (0,0); you can adjust X,Y if needed
     VirtualInputManager:SendMouseButtonEvent(0, 0, Enum.UserInputState.Begin, true, game, 0)
     VirtualInputManager:SendMouseButtonEvent(0, 0, Enum.UserInputState.End, true, game, 0)
 end
@@ -33,15 +32,15 @@ function AutoTap.Start()
     running = true
     print("[AutoTap] Started")
 
-    -- Main loop: wait for GUI to change, tap, then wait again
-    mainThread = task.spawn(function()
+    -- Persistent tap loop
+    tapThread = task.spawn(function()
         while running do
-            -- Wait until GUI Y.Scale is not 1.5
+            -- Wait until GUI position is not 1.5
             while gui and gui.Position.Y.Scale == 1.5 and running do
                 task.wait(0.1)
             end
 
-            -- Start tapping until GUI goes back to 1.5
+            -- Tap while GUI position is not 1.5
             while gui and gui.Position.Y.Scale ~= 1.5 and running do
                 sendTap()
                 task.wait(0.25) -- 250ms tap interval
@@ -76,7 +75,7 @@ function AutoTap.Stop()
         guiDestroyConn = nil
     end
 
-    mainThread = nil
+    tapThread = nil
 end
 
 return AutoTap
