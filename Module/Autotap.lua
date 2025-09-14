@@ -1,11 +1,11 @@
 -- Autotap.lua
 local AutoTap = {}
 
---// Services
+-- Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
---// References
+-- References
 local player = Players.LocalPlayer
 local gui = player:WaitForChild("PlayerGui"):WaitForChild("Fishing"):WaitForChild("Main")
 
@@ -13,7 +13,7 @@ local netFolder = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("_Inde
 local net = netFolder:WaitForChild("net")
 local fishingStopped = net:WaitForChild("RE/FishingStopped")
 
---// State
+-- State
 local running = false
 local tapThread
 local guiConn
@@ -21,7 +21,7 @@ local stopConn
 
 -- Function to send tap
 local function sendTap()
-	-- Replace this with actual action
+	-- Replace this with actual tap action
 	print("TAP sent")
 	-- Example:
 	-- ReplicatedStorage.TapEvent:FireServer()
@@ -33,23 +33,13 @@ function AutoTap.Start()
 	running = true
 	print("[AutoTap] Started")
 
-	-- Listen for GUI size changes
-	guiConn = gui:GetPropertyChangedSignal("Size"):Connect(function()
-		local yScale = gui.Size.Y.Scale
-		if yScale ~= 1.5 and not tapThread then
-			-- start tapping loop
-			tapThread = task.spawn(function()
-				while running and gui.Size.Y.Scale ~= 1.5 do
-					sendTap()
-					task.wait(0.25) -- 250ms
-				end
-				tapThread = nil
-			end)
-		elseif yScale == 1.5 then
-			-- stop tapping loop
-			if tapThread then
-				tapThread = nil
+	-- Persistent tap loop
+	tapThread = task.spawn(function()
+		while running do
+			if gui and gui.Size.Y.Scale ~= 1.5 then
+				sendTap()
 			end
+			task.wait(0.25)
 		end
 	end)
 
@@ -65,16 +55,12 @@ function AutoTap.Stop()
 	running = false
 	print("[AutoTap] Stopped")
 
-	if guiConn then
-		guiConn:Disconnect()
-		guiConn = nil
-	end
 	if stopConn then
 		stopConn:Disconnect()
 		stopConn = nil
 	end
 
-	-- ensure tap loop stops
+	-- Stop loop
 	tapThread = nil
 end
 
