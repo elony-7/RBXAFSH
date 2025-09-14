@@ -34,6 +34,16 @@ function AutoTap.Start()
     running = true
     print("[AutoTap] Started")
 
+    -- Listen to FishingStopped event to stop tapping immediately
+    stopConn = fishingStopped.OnClientEvent:Connect(function()
+        tapping = false
+    end)
+
+    -- Stop if GUI is destroyed
+    guiDestroyConn = gui.Destroying:Connect(function()
+        AutoTap.Stop()
+    end)
+
     -- Persistent tap loop
     tapThread = task.spawn(function()
         while running do
@@ -50,19 +60,10 @@ function AutoTap.Start()
                 task.wait(0.25)
             end
 
-            -- After stopping taps (GUI back to 1.5 or FishingStopped), loop back to waiting
+            -- After stopping taps (FishingStopped fired or GUI back to 1.5), go back to waiting
+            tapping = false
             task.wait(0.1)
         end
-    end)
-
-    -- When fishing stops, stop tapping but don't stop the AutoTap loop
-    stopConn = fishingStopped.OnClientEvent:Connect(function()
-        tapping = false
-    end)
-
-    -- Stop if GUI is destroyed
-    guiDestroyConn = gui.Destroying:Connect(function()
-        AutoTap.Stop()
     end)
 end
 
