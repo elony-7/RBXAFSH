@@ -29,6 +29,7 @@ end
 
 -- Start function
 function AutoTap.Start()
+    print("this is updated")
 	if running then return end
 	running = true
 	print("[AutoTap] Started")
