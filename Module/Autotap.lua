@@ -36,7 +36,7 @@ function AutoTap.Start()
     -- Persistent tap loop
     tapThread = task.spawn(function()
         while running do
-            -- Wait until GUI position is not 1.5
+            -- Wait while GUI position is 1.5
             while gui and gui.Position.Y.Scale == 1.5 and running do
                 task.wait(0.1)
             end
@@ -46,6 +46,9 @@ function AutoTap.Start()
                 sendTap()
                 task.wait(0.25) -- 250ms tap interval
             end
+
+            -- Small wait to prevent busy looping
+            task.wait(0.1)
         end
     end)
 
