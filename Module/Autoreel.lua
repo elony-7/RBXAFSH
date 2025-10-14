@@ -18,7 +18,7 @@ local inputConnection
 local function startSpam()
     if spamming then return end
     spamming = true
-    print("✅ Started unlimited spam (40ms delay)")
+    print("✅ Started unlimited spam (500ms delay)")
 
     spamThread = task.spawn(function()
         while spamming do
