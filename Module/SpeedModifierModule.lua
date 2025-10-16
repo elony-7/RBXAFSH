@@ -1,62 +1,53 @@
---// SpeedModifier.lua
--- Modular speed management system for Roblox
--- Handles all speed-related logic internally
+--========================
+-- SpeedModifier.lua
+--========================
+-- Handles player's walk speed logic modularly
 
---// Dependencies
 local Players = game:GetService("Players")
-
 local SpeedModifier = {}
-SpeedModifier.__index = SpeedModifier
 
---// Constructor
-function SpeedModifier.new(player)
-	local self = setmetatable({}, SpeedModifier)
+SpeedModifier.DefaultSpeed = 16
+SpeedModifier.CurrentSpeed = 16
+SpeedModifier.Enabled = false
 
-	self.Player = player or Players.LocalPlayer
-	self.Character = self.Player.Character or self.Player.CharacterAdded:Wait()
-	self.Humanoid = self.Character:WaitForChild("Humanoid")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
 
-	self.DefaultSpeed = 16
-	self.CurrentSpeed = self.DefaultSpeed
-	self.Enabled = false
-
-	-- Reconnect when character respawns
-	self.Player.CharacterAdded:Connect(function(char)
-		self.Character = char
-		self.Humanoid = char:WaitForChild("Humanoid")
-		self:ApplyCurrentState()
-	end)
-
-	return self
-end
-
---// Applies the current speed state
-function SpeedModifier:ApplyCurrentState()
-	if not self.Humanoid then return end
-	if self.Enabled then
-		self.Humanoid.WalkSpeed = self.CurrentSpeed
+-- Auto-update humanoid when respawned
+player.CharacterAdded:Connect(function(char)
+	character = char
+	humanoid = char:WaitForChild("Humanoid")
+	if SpeedModifier.Enabled then
+		humanoid.WalkSpeed = SpeedModifier.CurrentSpeed
 	else
-		self.Humanoid.WalkSpeed = self.DefaultSpeed
+		humanoid.WalkSpeed = SpeedModifier.DefaultSpeed
+	end
+end)
+
+--========================
+-- Public Functions
+--========================
+function SpeedModifier.SetEnabled(state)
+	SpeedModifier.Enabled = state
+	if humanoid then
+		humanoid.WalkSpeed = state and SpeedModifier.CurrentSpeed or SpeedModifier.DefaultSpeed
 	end
 end
 
---// Public: Enable or disable the modifier
-function SpeedModifier:SetEnabled(state: boolean)
-	self.Enabled = state
-	self:ApplyCurrentState()
+function SpeedModifier.SetSpeed(value)
+	SpeedModifier.CurrentSpeed = math.clamp(value, 0, 200)
+	if SpeedModifier.Enabled and humanoid then
+		humanoid.WalkSpeed = SpeedModifier.CurrentSpeed
+	end
 end
 
---// Public: Set the walking speed value
-function SpeedModifier:SetSpeed(value: number)
-	self.CurrentSpeed = math.clamp(value, 0, 200)
-	self:ApplyCurrentState()
-end
-
---// Public: Reset to default
-function SpeedModifier:Reset()
-	self.Enabled = false
-	self.CurrentSpeed = self.DefaultSpeed
-	self:ApplyCurrentState()
+function SpeedModifier.Reset()
+	SpeedModifier.Enabled = false
+	SpeedModifier.CurrentSpeed = SpeedModifier.DefaultSpeed
+	if humanoid then
+		humanoid.WalkSpeed = SpeedModifier.DefaultSpeed
+	end
 end
 
 return SpeedModifier
