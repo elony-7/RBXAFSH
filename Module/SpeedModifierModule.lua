@@ -1,69 +1,64 @@
---========================
--- SpeedModifier.lua
---========================
--- Modular player speed controller
+-- speedmodifier.lua
+-- Handles both walk and run speed logic
 
-local Players = game:GetService("Players")
 local SpeedModifier = {}
+SpeedModifier.enabled = false
+SpeedModifier.walkSpeed = 16
+SpeedModifier.runSpeed = 24
+SpeedModifier.currentModifier = 1.0
 
-SpeedModifier.DefaultSpeed = 16
-SpeedModifier.CurrentSpeed = 16
-SpeedModifier.Enabled = false
+local player = game.Players.LocalPlayer
+local userInputService = game:GetService("UserInputService")
 
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
+-- internal flag
+local isRunning = false
 
--- Reapply settings when respawned
-player.CharacterAdded:Connect(function(char)
-	character = char
-	humanoid = char:WaitForChild("Humanoid")
-	if SpeedModifier.Enabled then
-		humanoid.WalkSpeed = SpeedModifier.CurrentSpeed
-	else
-		humanoid.WalkSpeed = SpeedModifier.DefaultSpeed
+-- function to update the humanoid's speed
+local function updateSpeed()
+	if not player.Character or not player.Character:FindFirstChild("Humanoid") then
+		return
+	end
+
+	local humanoid = player.Character:FindFirstChild("Humanoid")
+	local baseSpeed = isRunning and SpeedModifier.runSpeed or SpeedModifier.walkSpeed
+	humanoid.WalkSpeed = baseSpeed * SpeedModifier.currentModifier
+end
+
+-- toggle on/off
+function SpeedModifier:SetEnabled(state)
+	self.enabled = state
+	updateSpeed()
+end
+
+-- change modifier (e.g. slider value)
+function SpeedModifier:SetModifier(value)
+	self.currentModifier = value
+	updateSpeed()
+end
+
+-- listen to Shift key to detect running
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed or not SpeedModifier.enabled then
+		return
+	end
+
+	if input.KeyCode == Enum.KeyCode.LeftShift then
+		isRunning = true
+		updateSpeed()
 	end
 end)
 
--- Public: Enable/disable
-function SpeedModifier.SetEnabled(state)
-	SpeedModifier.Enabled = state
-	if humanoid then
-		humanoid.WalkSpeed = state and SpeedModifier.CurrentSpeed or SpeedModifier.DefaultSpeed
+userInputService.InputEnded:Connect(function(input)
+	if input.KeyCode == Enum.KeyCode.LeftShift then
+		isRunning = false
+		updateSpeed()
 	end
-end
+end)
 
--- Public: Set custom speed
-function SpeedModifier.SetSpeed(value)
-	SpeedModifier.CurrentSpeed = math.clamp(value, 0, 300)
-	if SpeedModifier.Enabled and humanoid then
-		humanoid.WalkSpeed = SpeedModifier.CurrentSpeed
-	end
-end
-
--- Public: Reset speed
-function SpeedModifier.Reset()
-	SpeedModifier.Enabled = false
-	SpeedModifier.CurrentSpeed = SpeedModifier.DefaultSpeed
-	if humanoid then
-		humanoid.WalkSpeed = SpeedModifier.DefaultSpeed
-	end
-end
-
--- Public: Temporary boost for X seconds
-function SpeedModifier.Boost(tempSpeed, duration)
-	local originalSpeed = SpeedModifier.CurrentSpeed
-	local wasEnabled = SpeedModifier.Enabled
-
-	SpeedModifier.SetEnabled(true)
-	SpeedModifier.SetSpeed(tempSpeed)
-
-	task.delay(duration, function()
-		SpeedModifier.SetSpeed(originalSpeed)
-		if not wasEnabled then
-			SpeedModifier.SetEnabled(false)
-		end
-	end)
-end
+-- if character respawns, reapply the speed
+player.CharacterAdded:Connect(function()
+	task.wait(1)
+	updateSpeed()
+end)
 
 return SpeedModifier
