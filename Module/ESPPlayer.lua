@@ -1,5 +1,5 @@
 --==================================================
--- Player ESP Module
+-- Player ESP (Highlight-based)
 --==================================================
 
 local ESPPlayer = {}
@@ -8,43 +8,35 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 ESPPlayer.Enabled = false
-local espObjects = {} -- store all ESP BillboardGui objects
+local highlights = {}
 
---== Helper: Create ESP Billboard ==--
+--== Create Highlight for Player ==--
 local function createESP(player)
-    if not player.Character or not player.Character:FindFirstChild("Head") then return end
-    if espObjects[player] then return end -- already created
+    if not player.Character then return end
+    if highlights[player] then return end
 
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "PlayerESP"
-    billboard.Adornee = player.Character:FindFirstChild("Head")
-    billboard.AlwaysOnTop = true
-    billboard.Size = UDim2.new(0, 200, 0, 50)
-    billboard.StudsOffset = Vector3.new(0, 2, 0)
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "PlayerESP_Highlight"
+    highlight.FillColor = Color3.fromRGB(0, 255, 0) -- green
+    highlight.FillTransparency = 0.7 -- transparent body glow
+    highlight.OutlineColor = Color3.fromRGB(0, 255, 0)
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Adornee = player.Character
+    highlight.Parent = game.CoreGui -- ensures it’s always visible
 
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Text = player.DisplayName .. " (" .. player.Name .. ")"
-    label.TextColor3 = Color3.new(1, 1, 0)
-    label.TextStrokeTransparency = 0.2
-    label.Font = Enum.Font.SourceSansBold
-    label.TextScaled = true
-    label.Parent = billboard
-
-    billboard.Parent = player.Character:FindFirstChild("Head")
-    espObjects[player] = billboard
+    highlights[player] = highlight
 end
 
---== Helper: Remove ESP Billboard ==--
+--== Remove Highlight ==--
 local function removeESP(player)
-    if espObjects[player] then
-        espObjects[player]:Destroy()
-        espObjects[player] = nil
+    if highlights[player] then
+        highlights[player]:Destroy()
+        highlights[player] = nil
     end
 end
 
---== Update Loop ==--
+--== Refresh ESP for all players ==--
 local function updateESP()
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
@@ -57,7 +49,7 @@ local function updateESP()
     end
 end
 
---== Player Added / Removed ==--
+--== Handle players joining/leaving ==--
 Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function()
         if ESPPlayer.Enabled then
@@ -67,29 +59,35 @@ Players.PlayerAdded:Connect(function(player)
     end)
 end)
 
-Players.PlayerRemoving:Connect(function(player)
-    removeESP(player)
-end)
+Players.PlayerRemoving:Connect(removeESP)
 
---== Main Control Functions ==--
+--== Start/Stop ==--
 function ESPPlayer.Start()
+    if ESPPlayer.Enabled then return end
     ESPPlayer.Enabled = true
     updateESP()
     print("✅ Player ESP ENABLED")
 
-    -- Keep updating if character respawns or new players join
     RunService.Heartbeat:Connect(function()
         if not ESPPlayer.Enabled then return end
-        updateESP()
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                if not highlights[player] then
+                    createESP(player)
+                elseif highlights[player].Adornee ~= player.Character then
+                    highlights[player].Adornee = player.Character
+                end
+            end
+        end
     end)
 end
 
 function ESPPlayer.Stop()
     ESPPlayer.Enabled = false
-    for player, esp in pairs(espObjects) do
-        esp:Destroy()
+    for player, highlight in pairs(highlights) do
+        highlight:Destroy()
     end
-    table.clear(espObjects)
+    table.clear(highlights)
     print("❌ Player ESP DISABLED")
 end
 
