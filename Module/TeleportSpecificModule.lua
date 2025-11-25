@@ -48,7 +48,7 @@ function TeleportSpecificModule.Start()
                 index = 1 -- loop back
             end
 
-            task.wait(1.5) -- delay between teleports
+            task.wait(200) -- delay between teleports
         end
     end)
 end
