@@ -57,9 +57,9 @@ function TeleportSpecificModule.Start()
 
             -- special wait for location1 (far, needs loading)
             if name == "location1" then
-                task.wait(0.1)
+                task.wait(0.05)
             else
-                task.wait(0.015)
+                task.wait(0.05)
             end
         end
     end)
