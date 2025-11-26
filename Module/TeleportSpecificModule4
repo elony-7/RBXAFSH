@@ -34,7 +34,7 @@ local heartbeatConnection = nil
 
 -- teleport speed limit (seconds per location)
 -- 0.02 = max 50 teleports per second
-local TELEPORT_INTERVAL = 0.1
+local TELEPORT_INTERVAL = 0.5
 
 function TeleportSpecificModule2.Start()
     if running then return end
