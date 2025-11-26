@@ -9,11 +9,11 @@ TeleportSpecificModule.Locations = {
     ["location1-3"] = Vector3.new(-6.1, 2069.6, -104.7),
     ["location1-4"] = Vector3.new(4.0, 2069.6, -100.7),
     ["location1-5"] = Vector3.new(0.8, 2069.6, -102.6),
-    ["location2"] = Vector3.new(215.3, 152.6, 124.4),
-    ["location3"] = Vector3.new(77.8, 73.0, 172.8),
-    ["location4"] = Vector3.new(-2.1, 3.5, 333.6),
-    ["location5"] = Vector3.new(-88.8, 353.8, 799.5),
-    ["location6"] = Vector3.new(-139.4, 389.0, 132.6)
+    ["location2"] = Vector3.new(215.3, 152.8, 124.4),
+    ["location3"] = Vector3.new(77.8, 73.2, 172.8),
+    ["location4"] = Vector3.new(-2.1, 3.7, 333.6),
+    ["location5"] = Vector3.new(-88.8, 353.9, 799.5),
+    ["location6"] = Vector3.new(-139.4, 389.2, 132.6)
 }
 
 print("Teleport Specific Locations Added")
