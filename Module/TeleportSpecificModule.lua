@@ -4,7 +4,7 @@ local TeleportSpecificModule = {}
 --  LIST OF TELEPORT COORDINATES (NAMED)
 -- ======================
 TeleportSpecificModule.Locations = {
-    ["location1"] = Vector3.new(-0.2, 2061.6, -100.1),
+    ["location1"] = Vector3.new(-0.2, 2070.6, -100.1),
     ["location1-2"] = Vector3.new(-1.9, 2061.6, -98.6),
     ["location1-3"] = Vector3.new(-6.1, 2061.6, -104.7),
     ["location1-4"] = Vector3.new(4.0, 2061.6, -100.7),
