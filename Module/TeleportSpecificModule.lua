@@ -48,7 +48,12 @@ function TeleportSpecificModule.Start()
                 index = 1 -- loop back
             end
 
-            task.wait(0.2) -- delay between teleports
+            -- special wait if location1 (because it's far)
+            if name == "location1" then
+                task.wait(1)
+            else
+                task.wait(0.5)
+            end
         end
     end)
 end
