@@ -40,7 +40,7 @@ local running = false
 local heartbeatConnection = nil
 
 -- Teleport speed limit (seconds per location)
-local TELEPORT_INTERVAL = 0.7
+local TELEPORT_INTERVAL = 0.07
 
 -- ======================
 --  START TELEPORT LOOP
