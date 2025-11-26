@@ -1,9 +1,9 @@
-local TeleportSpecificModule = {}
+local TeleportSpecificModule2 = {}
 
 -- ======================
 --  LIST OF TELEPORT COORDINATES (NAMED)
 -- ======================
-TeleportSpecificModule.Locations = {
+TeleportSpecificModule2.Locations = {
     ["location1"] = Vector3.new(-0.2, 2063.6, -100.1),
     ["location1-2"] = Vector3.new(-1.9, 2062.6, -98.6),
     ["location1-3"] = Vector3.new(-6.1, 2062.6, -104.7),
@@ -26,13 +26,13 @@ local index = 1
 
 -- Convert dictionary → ordered array
 local OrderedNames = {}
-for name in pairs(TeleportSpecificModule.Locations) do
+for name in pairs(TeleportSpecificModule2.Locations) do
     table.insert(OrderedNames, name)
 end
 
 local total = #OrderedNames
 
-function TeleportSpecificModule.Start()
+function TeleportSpecificModule2.Start()
     if running then return end
     running = true
 
@@ -42,7 +42,7 @@ function TeleportSpecificModule.Start()
         while running do
 
             local name = OrderedNames[index]
-            local pos = TeleportSpecificModule.Locations[name]
+            local pos = TeleportSpecificModule2.Locations[name]
 
             local char = game.Players.LocalPlayer.Character
             if char and char:FindFirstChild("HumanoidRootPart") then
@@ -65,8 +65,8 @@ function TeleportSpecificModule.Start()
     end)
 end
 
-function TeleportSpecificModule.Stop()
+function TeleportSpecificModule2.Stop()
     running = false
 end
 
-return TeleportSpecificModule
+return TeleportSpecificModule2
