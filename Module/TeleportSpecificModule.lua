@@ -55,7 +55,7 @@ function TeleportSpecificModule.Start()
             if name == "location1" then
                 task.wait(2)
             else
-                task.wait(0.08)
+                task.wait(0.015)
             end
         end
     end)
