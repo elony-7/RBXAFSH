@@ -26,15 +26,17 @@ for name in pairs(TeleportSpecificModule.Locations) do
     table.insert(OrderedNames, name)
 end
 
--- also keep count
 local total = #OrderedNames
 
 function TeleportSpecificModule.Start()
     if running then return end
     running = true
 
+    index = 1  -- ALWAYS start from location1 when enabled
+
     task.spawn(function()
         while running do
+
             local name = OrderedNames[index]
             local pos = TeleportSpecificModule.Locations[name]
 
@@ -43,12 +45,13 @@ function TeleportSpecificModule.Start()
                 char.HumanoidRootPart.CFrame = CFrame.new(pos)
             end
 
+            -- move to next
             index = index + 1
             if index > total then
-                index = 1 -- loop back
+                index = 1
             end
 
-            -- special wait if location1 (because it's far)
+            -- special wait for location1 (far, needs loading)
             if name == "location1" then
                 task.wait(1)
             else
