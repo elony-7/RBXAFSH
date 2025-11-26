@@ -23,7 +23,7 @@ for n in pairs(TeleportSpecificModule2.Locations) do
 end
 table.sort(OrderedNames)
 
--- pre-cache all CFrames (critical optimization)
+-- pre-cache all CFrames
 local CachedCFrames = {}
 for name, vec in pairs(TeleportSpecificModule2.Locations) do
     CachedCFrames[name] = CFrame.new(vec)
@@ -32,9 +32,21 @@ end
 local running = false
 local heartbeatConnection = nil
 
--- teleport speed limit (seconds per location)
--- 0.02 = max 50 teleports per second
+-- 0.07 seconds = original 14 teleports/sec
 local TELEPORT_INTERVAL = 0.07
+
+-- number of smoothing steps per teleport
+local SMOOTH_STEPS = 20
+
+-- smooth gradual movement
+local function SmoothMove(hrp, targetCF)
+    local startCF = hrp.CFrame
+    for i = 1, SMOOTH_STEPS do
+        local alpha = i / SMOOTH_STEPS
+        hrp.CFrame = startCF:Lerp(targetCF, alpha)
+        task.wait() -- tiny delay for smoothing
+    end
+end
 
 function TeleportSpecificModule2.Start()
     if running then return end
@@ -43,7 +55,6 @@ function TeleportSpecificModule2.Start()
     local index = 1
     local total = #OrderedNames
     local player = game.Players.LocalPlayer
-
     local timeAccum = 0
 
     heartbeatConnection = game:GetService("RunService").Heartbeat:Connect(function(dt)
@@ -51,14 +62,15 @@ function TeleportSpecificModule2.Start()
 
         timeAccum = timeAccum + dt
         if timeAccum < TELEPORT_INTERVAL then
-            return -- skip until enough time passed
+            return
         end
         timeAccum = 0
 
         local char = player.Character
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
         if hrp then
-            hrp.CFrame = CachedCFrames[OrderedNames[index]]
+            local target = CachedCFrames[OrderedNames[index]]
+            SmoothMove(hrp, target)
         end
 
         index = index + 1
