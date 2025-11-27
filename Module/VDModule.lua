@@ -62,7 +62,7 @@ local function applyAttributes(character)
 
     -- Killer attributes
     setAttribute(character, "breakspeed", settings.killer.breakspeed)
-    setAttribute(character, "speed", settings.killer.speed)
+    setAttribute(character, "Speed", settings.killer.speed)
     setAttribute(character, "speedboost", settings.killer.speedboost)
     setAttribute(character, "Mask", settings.killer.mask)
 
