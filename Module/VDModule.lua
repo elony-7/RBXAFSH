@@ -63,7 +63,6 @@ local function applyAttributes(character)
     -- Killer attributes
     setAttribute(character, "breakspeed", settings.killer.breakspeed)
     setAttribute(character, "Speed", settings.killer.speed)
-    setAttribute(character, "speedboost", settings.killer.speedboost)
     setAttribute(character, "Mask", settings.killer.mask)
 
     -- Survivor attributes
@@ -112,11 +111,6 @@ end
 
 function VD.SetKillerSpeed(val)
     settings.killer.speed = tonumber(val)
-    bindCharacter(LocalPlayer.Character)
-end
-
-function VD.SetKillerSpeedBoost(val)
-    settings.killer.speedboost = tonumber(val)
     bindCharacter(LocalPlayer.Character)
 end
 
