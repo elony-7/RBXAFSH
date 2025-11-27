@@ -21,23 +21,25 @@ end
 table.sort(OrderedNames)
 
 -- ======================
--- PRE-CACHE CFRAMES
+-- PRE-CACHE ALL CFRAMES
 -- ======================
 local CachedCFrames = {}
 for name, vec in pairs(TeleportSpecificModule2.Locations) do
     CachedCFrames[name] = CFrame.new(vec)
 end
 
--- STATE VARS
+-- ======================
+-- STATE
+-- ======================
 local running = false
 local heartbeatConnection = nil
 
--- Safe teleport interval
-local TELEPORT_INTERVAL = 0.07    -- good for memory
-local SMOOTHNESS = 0.55           -- 0–1 tween strength (recommended 0.5)
+-- fast but safe interval
+local TELEPORT_INTERVAL = 0.07
+local SMOOTHNESS = 0.55    -- how much lerp (0-1)
 
 -- ======================
--- START LOOP
+-- START
 -- ======================
 function TeleportSpecificModule2.Start()
     if running then return end
@@ -51,6 +53,7 @@ function TeleportSpecificModule2.Start()
     heartbeatConnection = game:GetService("RunService").Heartbeat:Connect(function(dt)
         if not running then return end
 
+        -- wait until interval time reached
         timeAccum += dt
         if timeAccum < TELEPORT_INTERVAL then
             return
@@ -59,25 +62,18 @@ function TeleportSpecificModule2.Start()
 
         local char = player.Character
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        local humanoid = char and char:FindFirstChildOfClass("Humanoid")
 
         if hrp then
-            -- Disable physics transitions (RAM-safe)
-            if humanoid then
-                humanoid.PlatformStand = true
-                humanoid.AutoRotate = false
-            end
-
-            -- Smooth move (no streaming spike)
             local target = CachedCFrames[OrderedNames[index]]
+
+            -- smooth movement (safe for RAM)
             hrp.CFrame = hrp.CFrame:Lerp(target, SMOOTHNESS)
 
-            -- Reset velocity to avoid physics rebuild
+            -- reset velocity (VERY IMPORTANT for memory stabilization)
             hrp.AssemblyLinearVelocity = Vector3.zero
             hrp.AssemblyAngularVelocity = Vector3.zero
         end
 
-        -- Iterate to next location
         index += 1
         if index > total then
             index = 1
@@ -86,22 +82,13 @@ function TeleportSpecificModule2.Start()
 end
 
 -- ======================
--- STOP LOOP
+-- STOP
 -- ======================
 function TeleportSpecificModule2.Stop()
     running = false
     if heartbeatConnection then
         heartbeatConnection:Disconnect()
         heartbeatConnection = nil
-    end
-
-    -- Re-enable humanoid behavior
-    local player = game.Players.LocalPlayer
-    local char = player.Character
-    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        humanoid.PlatformStand = false
-        humanoid.AutoRotate = true
     end
 end
 
