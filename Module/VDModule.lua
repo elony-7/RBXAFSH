@@ -30,45 +30,44 @@ local masks = { "Richard", "Alex", "Brandon", "Cobra", "Rabbit", "Ritcher", "Ton
 local characterConnection = nil
 
 --========================================================
--- SAFE ATTRIBUTE SETTER
+-- UNIVERSAL ATTRIBUTE SETTER
+-- Supports:
+--   ✔ character:SetAttribute("name")
+--   ✔ character.Attributes.name.Value
+--========================================================
+local function setAttribute(character, attr, value)
+    if value == nil then return end
+    if not character then return end
+
+    -- Case A — true Roblox attribute
+    local current = character:GetAttribute(attr)
+    if current ~= nil then
+        character:SetAttribute(attr, value)
+        return
+    end
+
+    -- Case B — folder Attributes with ValueObjects
+    local folder = character:FindFirstChild("Attributes")
+    if folder and folder:FindFirstChild(attr) then
+        folder[attr].Value = value
+        return
+    end
+end
+
+--========================================================
+-- APPLY ATTRIBUTES
 --========================================================
 local function applyAttributes(character)
     if not character then return end
 
-    local attrs = character:FindFirstChild("Attributes")
-    if not attrs then return end
+    -- Killer attributes
+    setAttribute(character, "breakspeed", settings.killer.breakspeed)
+    setAttribute(character, "speed", settings.killer.speed)
+    setAttribute(character, "speedboost", settings.killer.speedboost)
+    setAttribute(character, "Mask", settings.killer.mask)
 
-    -- Killer Attributes
-    if settings.killer.breakspeed then
-        if attrs:FindFirstChild("breakspeed") then
-            attrs.breakspeed.Value = settings.killer.breakspeed
-        end
-    end
-
-    if settings.killer.speed then
-        if attrs:FindFirstChild("speed") then
-            attrs.speed.Value = settings.killer.speed
-        end
-    end
-
-    if settings.killer.speedboost then
-        if attrs:FindFirstChild("speedboost") then
-            attrs.speedboost.Value = settings.killer.speedboost
-        end
-    end
-
-    if settings.killer.mask then
-        if attrs:FindFirstChild("Mask") then
-            attrs.Mask.Value = settings.killer.mask
-        end
-    end
-
-    -- Survivor Attributes
-    if settings.survivor.speedboost then
-        if attrs:FindFirstChild("speedboost") then
-            attrs.speedboost.Value = settings.survivor.speedboost
-        end
-    end
+    -- Survivor attributes
+    setAttribute(character, "speedboost", settings.survivor.speedboost)
 end
 
 --========================================================
