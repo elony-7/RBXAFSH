@@ -70,6 +70,56 @@ local function applyAttributes(character)
 end
 
 --========================================================
+-- CONSTANT ATTRIBUTE ENFORCER (Anti-Server Override)
+--========================================================
+task.spawn(function()
+    while true do
+        task.wait(0.25) -- runs 4 times per second (safe, low load)
+
+        local char = LocalPlayer.Character
+        if not char then continue end
+
+        local attrs = char:FindFirstChild("Attributes")
+
+        -- Killer: breakspeed
+        if settings.killer.breakspeed and attrs and attrs:FindFirstChild("breakspeed") then
+            if attrs.breakspeed.Value ~= settings.killer.breakspeed then
+                attrs.breakspeed.Value = settings.killer.breakspeed
+            end
+        end
+
+        -- Killer: speed
+        if settings.killer.speed and attrs and attrs:FindFirstChild("Speed") then
+            if attrs.Speed.Value ~= settings.killer.speed then
+                attrs.Speed.Value = settings.killer.speed
+            end
+        end
+
+        -- Killer: speedboost
+        if settings.killer.speedboost and attrs and attrs:FindFirstChild("speedboost") then
+            if attrs.speedboost.Value ~= settings.killer.speedboost then
+                attrs.speedboost.Value = settings.killer.speedboost
+            end
+        end
+
+        -- Survivor: speedboost
+        if settings.survivor.speedboost and attrs and attrs:FindFirstChild("speedboost") then
+            if attrs.speedboost.Value ~= settings.survivor.speedboost then
+                attrs.speedboost.Value = settings.survivor.speedboost
+            end
+        end
+
+        -- Killer mask
+        if settings.killer.mask and attrs and attrs:FindFirstChild("Mask") then
+            if attrs.Mask.Value ~= settings.killer.mask then
+                attrs.Mask.Value = settings.killer.mask
+            end
+        end
+    end
+end)
+
+
+--========================================================
 -- REMOVE SKILLCHECK
 --========================================================
 local function removeSkillChecks()
