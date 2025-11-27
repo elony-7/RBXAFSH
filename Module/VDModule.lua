@@ -5,8 +5,6 @@
 local VD = {}
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
 local LocalPlayer = Players.LocalPlayer
 
 --========================================================
@@ -27,26 +25,21 @@ local settings = {
 
 local masks = { "Richard", "Alex", "Brandon", "Cobra", "Rabbit", "Richter", "Tony" }
 
-local characterConnection = nil
+local attributeConnections = {} -- store connections to prevent leaks
 
 --========================================================
 -- UNIVERSAL ATTRIBUTE SETTER
--- Supports:
---   ✔ character:SetAttribute("name")
---   ✔ character.Attributes.name.Value
 --========================================================
 local function setAttribute(character, attr, value)
-    if value == nil then return end
-    if not character then return end
+    if value == nil or not character then return end
 
-    -- Case A — true Roblox attribute
-    local current = character:GetAttribute(attr)
-    if current ~= nil then
+    -- Roblox attribute
+    if character:GetAttribute(attr) ~= nil then
         character:SetAttribute(attr, value)
         return
     end
 
-    -- Case B — folder Attributes with ValueObjects
+    -- ValueObject in Attributes folder
     local folder = character:FindFirstChild("Attributes")
     if folder and folder:FindFirstChild(attr) then
         folder[attr].Value = value
@@ -54,20 +47,42 @@ local function setAttribute(character, attr, value)
     end
 end
 
-local attributeConnections = {} -- store all connections per attribute
+--========================================================
+-- APPLY ATTRIBUTES
+--========================================================
+local function applyAttributes(character)
+    if not character then return end
 
+    -- Killer attributes
+    setAttribute(character, "breakspeed", settings.killer.breakspeed)
+    setAttribute(character, "speed", settings.killer.speed)
+    setAttribute(character, "speedboost", settings.killer.speedboost)
+    setAttribute(character, "Mask", settings.killer.mask)
+
+    -- Survivor attributes
+    setAttribute(character, "speedboost", settings.survivor.speedboost)
+end
+
+--========================================================
+-- REMOVE OLD CONNECTIONS TO PREVENT MEMORY LEAK
+--========================================================
 local function clearConnections()
     for _, conn in pairs(attributeConnections) do
-        if conn.Connected then conn:Disconnect() end
+        if conn.Connected then
+            conn:Disconnect()
+        end
     end
     attributeConnections = {}
 end
 
+--========================================================
+-- ENFORCE ATTRIBUTE VALUES (ANTI-SERVER OVERRIDE)
+--========================================================
 local function enforceAttribute(character, attrName, getValue)
     if not character then return end
-    local folder = character:FindFirstChild("Attributes")
 
-    -- ValueObject event
+    -- Folder ValueObject
+    local folder = character:FindFirstChild("Attributes")
     if folder and folder:FindFirstChild(attrName) then
         local valObj = folder[attrName]
         local conn = valObj:GetPropertyChangedSignal("Value"):Connect(function()
@@ -79,7 +94,7 @@ local function enforceAttribute(character, attrName, getValue)
         table.insert(attributeConnections, conn)
     end
 
-    -- Internal attribute event
+    -- Roblox internal attribute
     if character:GetAttribute(attrName) ~= nil then
         local conn = character:GetAttributeChangedSignal(attrName):Connect(function()
             local target = getValue()
@@ -92,30 +107,17 @@ local function enforceAttribute(character, attrName, getValue)
 end
 
 local function enforceAll(character)
-    clearConnections() -- remove old connections to prevent leaks
+    clearConnections()
+
     -- Killer
     enforceAttribute(character, "breakspeed", function() return settings.killer.breakspeed end)
     enforceAttribute(character, "speed", function() return settings.killer.speed end)
     enforceAttribute(character, "speedboost", function() return settings.killer.speedboost end)
     enforceAttribute(character, "Mask", function() return settings.killer.mask end)
+
     -- Survivor
     enforceAttribute(character, "speedboost", function() return settings.survivor.speedboost end)
 end
-
--- Apply on respawn
-LocalPlayer.CharacterAdded:Connect(function(char)
-    task.wait(0.2)
-    applyAttributes(char)
-    removeSkillChecks()
-    enforceAll(char)
-end)
-
-if LocalPlayer.Character then
-    bindCharacter(LocalPlayer.Character)
-    enforceAll(LocalPlayer.Character)
-end
-
-
 
 --========================================================
 -- REMOVE SKILLCHECK
@@ -137,13 +139,17 @@ end
 -- APPLY EVERYTHING ON CHARACTER SPAWN
 --========================================================
 local function bindCharacter(character)
+    if not character then return end
     task.wait(0.2)
     applyAttributes(character)
     removeSkillChecks()
+    enforceAll(character)
 end
 
 -- Character respawn listener
 LocalPlayer.CharacterAdded:Connect(bindCharacter)
+
+-- Apply immediately if character already exists
 if LocalPlayer.Character then
     bindCharacter(LocalPlayer.Character)
 end
@@ -151,7 +157,6 @@ end
 --========================================================
 -- PUBLIC API (CALLED FROM main.lua)
 --========================================================
-
 function VD.SetKillerBreakSpeed(val)
     settings.killer.breakspeed = tonumber(val)
     bindCharacter(LocalPlayer.Character)
@@ -159,6 +164,11 @@ end
 
 function VD.SetKillerSpeed(val)
     settings.killer.speed = tonumber(val)
+    bindCharacter(LocalPlayer.Character)
+end
+
+function VD.SetKillerSpeedBoost(val)
+    settings.killer.speedboost = tonumber(val)
     bindCharacter(LocalPlayer.Character)
 end
 
