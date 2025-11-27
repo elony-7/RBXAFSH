@@ -1,8 +1,5 @@
 local TeleportSpecificModule2 = {}
 
--- ======================
--- LIST OF TELEPORT COORDINATES (NAMED)
--- ======================
 TeleportSpecificModule2.Locations = {
     ["location1"]   = Vector3.new(-0.2, 2061.7, -100.1),
     ["location1-2"] = Vector3.new(-1.9, 2061.7, -98.6),
@@ -11,36 +8,23 @@ TeleportSpecificModule2.Locations = {
     ["location1-5"] = Vector3.new(0.8, 2061.7, -102.6)
 }
 
--- ======================
--- SORT NAMES TO ENSURE STABLE ORDER
--- ======================
 local OrderedNames = {}
 for name in pairs(TeleportSpecificModule2.Locations) do
     table.insert(OrderedNames, name)
 end
 table.sort(OrderedNames)
 
--- ======================
--- PRE-CACHE ALL CFRAMES
--- ======================
 local CachedCFrames = {}
 for name, vec in pairs(TeleportSpecificModule2.Locations) do
     CachedCFrames[name] = CFrame.new(vec)
 end
 
--- ======================
--- STATE
--- ======================
 local running = false
-local heartbeatConnection = nil
+local hb = nil
 
--- fast but safe interval
 local TELEPORT_INTERVAL = 0.07
-local SMOOTHNESS = 0.55    -- how much lerp (0-1)
+local SMOOTHNESS = 0.55
 
--- ======================
--- START
--- ======================
 function TeleportSpecificModule2.Start()
     if running then return end
     running = true
@@ -50,11 +34,10 @@ function TeleportSpecificModule2.Start()
     local player = game.Players.LocalPlayer
     local timeAccum = 0
 
-    heartbeatConnection = game:GetService("RunService").Heartbeat:Connect(function(dt)
+    hb = game:GetService("RunService").Heartbeat:Connect(function(dt)
         if not running then return end
-
-        -- wait until interval time reached
         timeAccum += dt
+
         if timeAccum < TELEPORT_INTERVAL then
             return
         end
@@ -66,10 +49,13 @@ function TeleportSpecificModule2.Start()
         if hrp then
             local target = CachedCFrames[OrderedNames[index]]
 
-            -- smooth movement (safe for RAM)
+            -- smooth toward
             hrp.CFrame = hrp.CFrame:Lerp(target, SMOOTHNESS)
 
-            -- reset velocity (VERY IMPORTANT for memory stabilization)
+            -- final exact snap (this triggers the server script!)
+            task.wait(0.001)
+            hrp.CFrame = target
+
             hrp.AssemblyLinearVelocity = Vector3.zero
             hrp.AssemblyAngularVelocity = Vector3.zero
         end
@@ -81,15 +67,9 @@ function TeleportSpecificModule2.Start()
     end)
 end
 
--- ======================
--- STOP
--- ======================
 function TeleportSpecificModule2.Stop()
     running = false
-    if heartbeatConnection then
-        heartbeatConnection:Disconnect()
-        heartbeatConnection = nil
-    end
+    if hb then hb:Disconnect() hb = nil end
 end
 
 return TeleportSpecificModule2
