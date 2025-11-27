@@ -25,7 +25,7 @@ local settings = {
     removeSkillcheck = false
 }
 
-local masks = { "Richard", "Alex", "Brandon", "Cobra", "Rabbit", "Ritcher", "Tony" }
+local masks = { "Richard", "Alex", "Brandon", "Cobra", "Rabbit", "Richter", "Tony" }
 
 local characterConnection = nil
 
