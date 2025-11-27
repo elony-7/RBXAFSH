@@ -54,69 +54,67 @@ local function setAttribute(character, attr, value)
     end
 end
 
---========================================================
--- APPLY ATTRIBUTES
---========================================================
-local function applyAttributes(character)
-    if not character then return end
+local attributeConnections = {} -- store all connections per attribute
 
-    -- Killer attributes
-    setAttribute(character, "breakspeed", settings.killer.breakspeed)
-    setAttribute(character, "Speed", settings.killer.speed)
-    setAttribute(character, "Mask", settings.killer.mask)
-
-    -- Survivor attributes
-    setAttribute(character, "speedboost", settings.survivor.speedboost)
+local function clearConnections()
+    for _, conn in pairs(attributeConnections) do
+        if conn.Connected then conn:Disconnect() end
+    end
+    attributeConnections = {}
 end
 
---========================================================
--- CONSTANT ATTRIBUTE ENFORCER (Anti-Server Override)
---========================================================
-task.spawn(function()
-    while true do
-        task.wait(0.25) -- runs 4 times per second (safe, low load)
+local function enforceAttribute(character, attrName, getValue)
+    if not character then return end
+    local folder = character:FindFirstChild("Attributes")
 
-        local char = LocalPlayer.Character
-        if not char then continue end
-
-        local attrs = char:FindFirstChild("Attributes")
-
-        -- Killer: breakspeed
-        if settings.killer.breakspeed and attrs and attrs:FindFirstChild("breakspeed") then
-            if attrs.breakspeed.Value ~= settings.killer.breakspeed then
-                attrs.breakspeed.Value = settings.killer.breakspeed
+    -- ValueObject event
+    if folder and folder:FindFirstChild(attrName) then
+        local valObj = folder[attrName]
+        local conn = valObj:GetPropertyChangedSignal("Value"):Connect(function()
+            local target = getValue()
+            if target ~= nil and valObj.Value ~= target then
+                valObj.Value = target
             end
-        end
-
-        -- Killer: speed
-        if settings.killer.speed and attrs and attrs:FindFirstChild("Speed") then
-            if attrs.Speed.Value ~= settings.killer.speed then
-                attrs.Speed.Value = settings.killer.speed
-            end
-        end
-
-        -- Killer: speedboost
-        if settings.killer.speedboost and attrs and attrs:FindFirstChild("speedboost") then
-            if attrs.speedboost.Value ~= settings.killer.speedboost then
-                attrs.speedboost.Value = settings.killer.speedboost
-            end
-        end
-
-        -- Survivor: speedboost
-        if settings.survivor.speedboost and attrs and attrs:FindFirstChild("speedboost") then
-            if attrs.speedboost.Value ~= settings.survivor.speedboost then
-                attrs.speedboost.Value = settings.survivor.speedboost
-            end
-        end
-
-        -- Killer mask
-        if settings.killer.mask and attrs and attrs:FindFirstChild("Mask") then
-            if attrs.Mask.Value ~= settings.killer.mask then
-                attrs.Mask.Value = settings.killer.mask
-            end
-        end
+        end)
+        table.insert(attributeConnections, conn)
     end
+
+    -- Internal attribute event
+    if character:GetAttribute(attrName) ~= nil then
+        local conn = character:GetAttributeChangedSignal(attrName):Connect(function()
+            local target = getValue()
+            if target ~= nil and character:GetAttribute(attrName) ~= target then
+                character:SetAttribute(attrName, target)
+            end
+        end)
+        table.insert(attributeConnections, conn)
+    end
+end
+
+local function enforceAll(character)
+    clearConnections() -- remove old connections to prevent leaks
+    -- Killer
+    enforceAttribute(character, "breakspeed", function() return settings.killer.breakspeed end)
+    enforceAttribute(character, "speed", function() return settings.killer.speed end)
+    enforceAttribute(character, "speedboost", function() return settings.killer.speedboost end)
+    enforceAttribute(character, "Mask", function() return settings.killer.mask end)
+    -- Survivor
+    enforceAttribute(character, "speedboost", function() return settings.survivor.speedboost end)
+end
+
+-- Apply on respawn
+LocalPlayer.CharacterAdded:Connect(function(char)
+    task.wait(0.2)
+    applyAttributes(char)
+    removeSkillChecks()
+    enforceAll(char)
 end)
+
+if LocalPlayer.Character then
+    bindCharacter(LocalPlayer.Character)
+    enforceAll(LocalPlayer.Character)
+end
+
 
 
 --========================================================
