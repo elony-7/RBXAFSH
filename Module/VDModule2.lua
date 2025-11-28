@@ -89,35 +89,40 @@ local function clearConnections()
     attributeConnections = {}
 end
 
---========================================================
--- ENFORCE ATTRIBUTE VALUES (ANTI-SERVER OVERRIDE)
---========================================================
-local function enforceAttribute(character, attrName, getValue)
+local function enforceAttribute(character, attrName, getScriptValue)
     if not character then return end
 
-    -- Folder ValueObject
     local folder = character:FindFirstChild("Attributes")
-    if folder and folder:FindFirstChild(attrName) then
-        local valObj = folder[attrName]
-        -- attach a protected connection
-        local ok, conn = pcall(function()
-            return valObj:GetPropertyChangedSignal("Value"):Connect(function()
-                if not character or not character.Parent then
-                    -- if character no longer exists, disconnect this conn (defensive)
-                    pcall(function() conn:Disconnect() end)
-                    return
-                end
+    if not folder then return end
 
-                local target = getValue()
-                if target ~= nil and valObj.Value ~= target then
-                    valObj.Value = target
-                end
-            end)
-        end)
-        if ok and conn then
-            table.insert(attributeConnections, conn)
-        end
+    local valObj = folder:FindFirstChild(attrName)
+    if not valObj then return end
+
+    -- Enforce immediately
+    local target = getScriptValue()
+    if target ~= nil and valObj.Value ~= target then
+        valObj.Value = target
     end
+
+    -- Protect from server changes
+    local connection
+    connection = valObj:GetPropertyChangedSignal("Value"):Connect(function()
+        if not character or not character.Parent then
+            pcall(function()
+                if connection then connection:Disconnect() end
+            end)
+            return
+        end
+
+        local desired = getScriptValue()
+        if desired ~= nil and valObj.Value ~= desired then
+            valObj.Value = desired
+        end
+    end)
+
+    table.insert(attributeConnections, connection)
+end
+
 
     -- Roblox internal attribute
     local okAttr, exists = pcall(function() return character:GetAttribute(attrName) ~= nil end)
