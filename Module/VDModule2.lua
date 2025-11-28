@@ -1,5 +1,5 @@
 --========================================================
--- VDModule.lua (Updated - leak safe)
+-- VDModule.lua (Option A - Clean + Leak Safe)
 --========================================================
 
 local VD = {}
@@ -25,11 +25,8 @@ local settings = {
 
 local masks = { "Richard", "Alex", "Brandon", "Cobra", "Rabbit", "Richter", "Tony" }
 
--- store active attribute connections so we can disconnect them
 local attributeConnections = {}
 local currentCharacter = nil
-
--- character added connection (so we can disconnect on destroy)
 local charAddedConn = nil
 
 --========================================================
@@ -38,10 +35,11 @@ local charAddedConn = nil
 local function setAttribute(character, attr, value)
     if value == nil or not character then return end
 
-    -- Roblox attribute
-    local ok, hasAttr = pcall(function() return character:GetAttribute(attr) ~= nil end)
-    if ok and hasAttr then
-        -- Only set if value differs (avoid spamming)
+    local ok, exists = pcall(function()
+        return character:GetAttribute(attr) ~= nil
+    end)
+
+    if ok and exists then
         local current = character:GetAttribute(attr)
         if current ~= value then
             character:SetAttribute(attr, value)
@@ -49,14 +47,12 @@ local function setAttribute(character, attr, value)
         return
     end
 
-    -- ValueObject in Attributes folder
     local folder = character:FindFirstChild("Attributes")
     if folder and folder:FindFirstChild(attr) then
         local vo = folder[attr]
         if vo.Value ~= value then
             vo.Value = value
         end
-        return
     end
 end
 
@@ -66,23 +62,22 @@ end
 local function applyAttributes(character)
     if not character then return end
 
-    -- Killer attributes
+    -- Killer
     setAttribute(character, "breakspeed", settings.killer.breakspeed)
     setAttribute(character, "speed", settings.killer.speed)
     setAttribute(character, "speedboost", settings.killer.speedboost)
     setAttribute(character, "Mask", settings.killer.mask)
 
-    -- Survivor attributes
+    -- Survivor
     setAttribute(character, "speedboost", settings.survivor.speedboost)
 end
 
 --========================================================
--- REMOVE OLD CONNECTIONS TO PREVENT MEMORY LEAK
+-- CLEAN ATTRIBUTE ENFORCERS
 --========================================================
 local function clearConnections()
-    for _, conn in pairs(attributeConnections) do
+    for _, conn in ipairs(attributeConnections) do
         if conn and conn.Connected then
-            -- protect calls
             pcall(function() conn:Disconnect() end)
         end
     end
@@ -90,24 +85,21 @@ local function clearConnections()
 end
 
 --========================================================
--- ENFORCE ATTRIBUTE VALUES (ANTI-SERVER OVERRIDE)
+-- ENFORCE SINGLE ATTRIBUTE (ANTI SERVER OVERRIDE)
 --========================================================
 local function enforceAttribute(character, attrName, getScriptValue)
-    if not character then return end
-
     local folder = character:FindFirstChild("Attributes")
     if not folder then return end
 
     local valObj = folder:FindFirstChild(attrName)
     if not valObj then return end
 
-    -- Enforce immediately
-    local target = getScriptValue()
-    if target ~= nil and valObj.Value ~= target then
-        valObj.Value = target
+    -- Immediate enforcement
+    local desired = getScriptValue()
+    if desired ~= nil and valObj.Value ~= desired then
+        valObj.Value = desired
     end
 
-    -- Protect from server changes
     local connection
     connection = valObj:GetPropertyChangedSignal("Value"):Connect(function()
         if not character or not character.Parent then
@@ -117,55 +109,66 @@ local function enforceAttribute(character, attrName, getScriptValue)
             return
         end
 
-        local desired = getScriptValue()
-        if desired ~= nil and valObj.Value ~= desired then
-            valObj.Value = desired
+        local expected = getScriptValue()
+        if expected ~= nil and valObj.Value ~= expected then
+            valObj.Value = expected
         end
     end)
 
     table.insert(attributeConnections, connection)
 end
 
+--========================================================
+-- ENFORCE ALL ATTRIBUTES
+--========================================================
+function enforceAll(character)
+    clearConnections()
+
+    -- Killer
+    enforceAttribute(character, "breakspeed", function()
+        return settings.killer.breakspeed
+    end)
+    enforceAttribute(character, "speed", function()
+        return settings.killer.speed
+    end)
+    enforceAttribute(character, "speedboost", function()
+        return settings.killer.speedboost
+    end)
+    enforceAttribute(character, "Mask", function()
+        return settings.killer.mask
+    end)
+
+    -- Survivor
+    enforceAttribute(character, "speedboost", function()
+        return settings.survivor.speedboost
+    end)
+end
 
 --========================================================
 -- REMOVE SKILLCHECK
 --========================================================
 local function removeSkillChecks()
+    if not settings.removeSkillcheck then return end
+
     local char = LocalPlayer.Character
     if not char then return end
 
-    if settings.removeSkillcheck then
-        local sc1 = char:FindFirstChild("Skillcheck-gen")
-        local sc2 = char:FindFirstChild("Skillcheck-player")
-
-        if sc1 then
-            pcall(function() sc1:Destroy() end)
-        end
-        if sc2 then
-            pcall(function() sc2:Destroy() end)
+    for _, name in ipairs({ "Skillcheck-gen", "Skillcheck-player" }) do
+        local obj = char:FindFirstChild(name)
+        if obj then
+            pcall(function() obj:Destroy() end)
         end
     end
 end
 
 --========================================================
--- APPLY EVERYTHING ON CHARACTER SPAWN
+-- CHARACTER BIND
 --========================================================
 local function bindCharacter(character)
     if not character then return end
 
-    -- If same character already bound, still ensure values are applied but avoid re-creating connections unnecessarily
-    if currentCharacter == character then
-        -- reapply attributes (keeps behavior same)
-        task.wait(0.1)
-        applyAttributes(character)
-        removeSkillChecks()
-        return
-    end
-
-    -- update currentCharacter
     currentCharacter = character
 
-    -- small delay to ensure character is fully initialized (keep original behavior)
     task.wait(0.2)
 
     applyAttributes(character)
@@ -173,39 +176,37 @@ local function bindCharacter(character)
     enforceAll(character)
 end
 
--- safe wrapper for character binds (used both on respawn and manual calls)
 local function safeBindCurrentCharacter()
-    local char = LocalPlayer and LocalPlayer.Character
+    local char = LocalPlayer.Character
     if char then
         bindCharacter(char)
     end
 end
 
--- Character respawn listener (store connection so we can clean up)
+-- CharacterAdded
 if not charAddedConn then
     charAddedConn = LocalPlayer.CharacterAdded:Connect(bindCharacter)
 end
 
--- Apply immediately if character already exists
 if LocalPlayer.Character then
     bindCharacter(LocalPlayer.Character)
 end
 
 --========================================================
--- PUBLIC API (CALLED FROM main.lua)
+-- PUBLIC API
 --========================================================
-function VD.SetKillerBreakSpeed(val)
-    settings.killer.breakspeed = tonumber(val)
+function VD.SetKillerBreakSpeed(v)
+    settings.killer.breakspeed = tonumber(v)
     safeBindCurrentCharacter()
 end
 
-function VD.SetKillerSpeed(val)
-    settings.killer.speed = tonumber(val)
+function VD.SetKillerSpeed(v)
+    settings.killer.speed = tonumber(v)
     safeBindCurrentCharacter()
 end
 
-function VD.SetKillerSpeedBoost(val)
-    settings.killer.speedboost = tonumber(val)
+function VD.SetKillerSpeedBoost(v)
+    settings.killer.speedboost = tonumber(v)
     safeBindCurrentCharacter()
 end
 
@@ -214,8 +215,8 @@ function VD.SetKillerMask(maskName)
     safeBindCurrentCharacter()
 end
 
-function VD.SetSurvivorSpeedBoost(val)
-    settings.survivor.speedboost = tonumber(val)
+function VD.SetSurvivorSpeedBoost(v)
+    settings.survivor.speedboost = tonumber(v)
     safeBindCurrentCharacter()
 end
 
@@ -229,19 +230,15 @@ function VD.GetMaskList()
 end
 
 --========================================================
--- CLEANUP (exposed so main script can call on reload)
+-- CLEANUP
 --========================================================
 function VD.Destroy()
-    -- disconnect CharacterAdded
     if charAddedConn and charAddedConn.Connected then
         pcall(function() charAddedConn:Disconnect() end)
     end
     charAddedConn = nil
 
-    -- clear attribute connections
     clearConnections()
-
-    -- stop referencing character
     currentCharacter = nil
 end
 
