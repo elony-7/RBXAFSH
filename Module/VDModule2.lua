@@ -76,19 +76,6 @@ local function applyAttributes(character)
     setAttribute(character, "speedboost", settings.survivor.speedboost)
 end
 
---========================================================
--- REMOVE OLD CONNECTIONS TO PREVENT MEMORY LEAK
---========================================================
-local function clearConnections()
-    for _, conn in pairs(attributeConnections) do
-        if conn and conn.Connected then
-            -- protect calls
-            pcall(function() conn:Disconnect() end)
-        end
-    end
-    attributeConnections = {}
-end
-
 local function enforceAttribute(character, attrName, getScriptValue)
     if not character then return end
 
@@ -124,6 +111,21 @@ local function enforceAttribute(character, attrName, getScriptValue)
 end
 
 
+
+--========================================================
+-- REMOVE OLD CONNECTIONS TO PREVENT MEMORY LEAK
+--========================================================
+local function clearConnections()
+    for _, conn in pairs(attributeConnections) do
+        if conn and conn.Connected then
+            -- protect calls
+            pcall(function() conn:Disconnect() end)
+        end
+    end
+    attributeConnections = {}
+end
+
+
     -- Roblox internal attribute
     local okAttr, exists = pcall(function() return character:GetAttribute(attrName) ~= nil end)
     if okAttr and exists then
@@ -144,22 +146,6 @@ end
             table.insert(attributeConnections, conn2)
         end
     end
-end
-
-local function enforceAll(character)
-    if not character then return end
-
-    -- Clear previous connections before creating new ones
-    clearConnections()
-
-    -- Killer
-    enforceAttribute(character, "breakspeed", function() return settings.killer.breakspeed end)
-    enforceAttribute(character, "speed", function() return settings.killer.speed end)
-    enforceAttribute(character, "speedboost", function() return settings.killer.speedboost end)
-    enforceAttribute(character, "Mask", function() return settings.killer.mask end)
-
-    -- Survivor
-    enforceAttribute(character, "speedboost", function() return settings.survivor.speedboost end)
 end
 
 --========================================================
