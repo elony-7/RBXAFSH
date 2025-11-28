@@ -1,5 +1,6 @@
 --========================================================
--- VDModule.lua (Option A - Clean + Leak Safe)
+-- VDModule.lua (Repaired: reapply user settings when server updates / recreates attributes)
+-- Minimal changes from your reverted version, focused on reliability.
 --========================================================
 
 local VD = {}
@@ -25,9 +26,14 @@ local settings = {
 
 local masks = { "Richard", "Alex", "Brandon", "Cobra", "Rabbit", "Richter", "Tony" }
 
-local attributeConnections = {}
-local currentCharacter = nil
-local charAddedConn = nil
+-- store connections so we can disconnect them
+local attributeConnections = {} -- { [1] = conn, ... }
+-- small helper to add connection
+local function pushConn(conn)
+    if conn then
+        table.insert(attributeConnections, conn)
+    end
+end
 
 --========================================================
 -- UNIVERSAL ATTRIBUTE SETTER
@@ -35,23 +41,23 @@ local charAddedConn = nil
 local function setAttribute(character, attr, value)
     if value == nil or not character then return end
 
-    local ok, exists = pcall(function()
-        return character:GetAttribute(attr) ~= nil
-    end)
-
-    if ok and exists then
-        local current = character:GetAttribute(attr)
-        if current ~= value then
-            character:SetAttribute(attr, value)
+    -- Roblox attribute (pcall to be safe in some contexts)
+    local ok, has = pcall(function() return character:GetAttribute(attr) ~= nil end)
+    if ok and has then
+        -- Only set if value differs (avoid spam)
+        local cur = character:GetAttribute(attr)
+        if cur ~= value then
+            pcall(function() character:SetAttribute(attr, value) end)
         end
         return
     end
 
+    -- ValueObject in Attributes folder
     local folder = character:FindFirstChild("Attributes")
-    if folder and folder:FindFirstChild(attr) then
-        local vo = folder[attr]
-        if vo.Value ~= value then
-            vo.Value = value
+    if folder then
+        local vo = folder:FindFirstChild(attr)
+        if vo and vo.Value ~= value then
+            pcall(function() vo.Value = value end)
         end
     end
 end
@@ -62,21 +68,21 @@ end
 local function applyAttributes(character)
     if not character then return end
 
-    -- Killer
+    -- Killer attributes
     setAttribute(character, "breakspeed", settings.killer.breakspeed)
     setAttribute(character, "speed", settings.killer.speed)
     setAttribute(character, "speedboost", settings.killer.speedboost)
     setAttribute(character, "Mask", settings.killer.mask)
 
-    -- Survivor
+    -- Survivor attributes
     setAttribute(character, "speedboost", settings.survivor.speedboost)
 end
 
 --========================================================
--- CLEAN ATTRIBUTE ENFORCERS
+-- REMOVE OLD CONNECTIONS TO PREVENT MEMORY LEAK
 --========================================================
 local function clearConnections()
-    for _, conn in ipairs(attributeConnections) do
+    for _, conn in pairs(attributeConnections) do
         if conn and conn.Connected then
             pcall(function() conn:Disconnect() end)
         end
@@ -85,161 +91,204 @@ local function clearConnections()
 end
 
 --========================================================
--- ENFORCE SINGLE ATTRIBUTE (ANTI SERVER OVERRIDE)
+-- ENFORCE ATTRIBUTE VALUES (ANTI-SERVER OVERRIDE)
+-- (ensures we reapply the saved script setting when server overwrites)
 --========================================================
-local function enforceAttribute(character, attrName, getScriptValue)
-    local folder = character:FindFirstChild("Attributes")
-    if not folder then return end
+local function enforceAttribute(character, attrName, getValue)
+    if not character then return end
 
-    local valObj = folder:FindFirstChild(attrName)
-    if not valObj then return end
-
-    -- Immediate enforcement
-    local desired = getScriptValue()
-    if desired ~= nil and valObj.Value ~= desired then
-        valObj.Value = desired
-    end
-
-    local connection
-    connection = valObj:GetPropertyChangedSignal("Value"):Connect(function()
+    -- helper to attempt to get ValueObject and enforce immediately
+    local function tryAttach()
         if not character or not character.Parent then
-            pcall(function()
-                if connection then connection:Disconnect() end
-            end)
-            return
+            return false
         end
 
-        local expected = getScriptValue()
-        if expected ~= nil and valObj.Value ~= expected then
-            valObj.Value = expected
+        -- Folder ValueObject enforcement
+        local folder = character:FindFirstChild("Attributes")
+        if folder then
+            local valObj = folder:FindFirstChild(attrName)
+            if valObj then
+                -- Immediately reapply desired value (in case server already changed it)
+                local desired = getValue()
+                if desired ~= nil then
+                    pcall(function() valObj.Value = desired end)
+                end
+
+                -- Watch for later server changes to this ValueObject
+                local conn = valObj:GetPropertyChangedSignal("Value"):Connect(function()
+                    -- reapply desired value if server changed it
+                    local target = getValue()
+                    if target ~= nil and valObj.Value ~= target then
+                        pcall(function() valObj.Value = target end)
+                    end
+                end)
+                pushConn(conn)
+                return true
+            end
+        end
+
+        -- Roblox internal attribute enforcement
+        local ok, exists = pcall(function() return character:GetAttribute(attrName) ~= nil end)
+        if ok and exists then
+            -- Immediately reapply desired value
+            local desired2 = getValue()
+            if desired2 ~= nil then
+                pcall(function() character:SetAttribute(attrName, desired2) end)
+            end
+
+            local conn2 = character:GetAttributeChangedSignal(attrName):Connect(function()
+                local target = getValue()
+                if target ~= nil and character:GetAttribute(attrName) ~= target then
+                    pcall(function() character:SetAttribute(attrName, target) end)
+                end
+            end)
+            pushConn(conn2)
+            return true
+        end
+
+        return false
+    end
+
+    -- Try to attach now; if not possible because Attributes/valueobject doesn't exist yet,
+    -- set up a watcher on the character to detect when Attributes or the specific ValueObject is created,
+    -- then attach enforcement then.
+    local attached = tryAttach()
+    if attached then
+        return
+    end
+
+    -- If not attached, listen for creation of Attributes folder or the ValueObject
+    local childAddedConn
+    childAddedConn = character.ChildAdded:Connect(function(child)
+        -- If Attributes folder appears, or some ValueObject is created, attempt to attach again
+        if child.Name == "Attributes" then
+            -- small delay to let its children initialize
+            task.delay(0.05, function()
+                if tryAttach() then
+                    -- once attached, disconnect this watcher
+                    if childAddedConn and childAddedConn.Connected then
+                        pcall(function() childAddedConn:Disconnect() end)
+                    end
+                end
+            end)
+        else
+            -- sometimes the Attributes folder exists and server creates the ValueObject directly
+            -- so when any child is added, attempt attach (safe)
+            task.delay(0.05, function()
+                if tryAttach() then
+                    if childAddedConn and childAddedConn.Connected then
+                        pcall(function() childAddedConn:Disconnect() end)
+                    end
+                end
+            end)
         end
     end)
 
-    table.insert(attributeConnections, connection)
+    pushConn(childAddedConn)
 end
 
---========================================================
--- ENFORCE ALL ATTRIBUTES
---========================================================
-function enforceAll(character)
+local function enforceAll(character)
     clearConnections()
 
     -- Killer
-    enforceAttribute(character, "breakspeed", function()
-        return settings.killer.breakspeed
-    end)
-    enforceAttribute(character, "speed", function()
-        return settings.killer.speed
-    end)
-    enforceAttribute(character, "speedboost", function()
-        return settings.killer.speedboost
-    end)
-    enforceAttribute(character, "Mask", function()
-        return settings.killer.mask
-    end)
+    enforceAttribute(character, "breakspeed", function() return settings.killer.breakspeed end)
+    enforceAttribute(character, "speed", function() return settings.killer.speed end)
+    enforceAttribute(character, "speedboost", function() return settings.killer.speedboost end)
+    enforceAttribute(character, "Mask", function() return settings.killer.mask end)
 
     -- Survivor
-    enforceAttribute(character, "speedboost", function()
-        return settings.survivor.speedboost
-    end)
+    enforceAttribute(character, "speedboost", function() return settings.survivor.speedboost end)
 end
 
 --========================================================
 -- REMOVE SKILLCHECK
 --========================================================
 local function removeSkillChecks()
-    if not settings.removeSkillcheck then return end
-
     local char = LocalPlayer.Character
     if not char then return end
 
-    for _, name in ipairs({ "Skillcheck-gen", "Skillcheck-player" }) do
-        local obj = char:FindFirstChild(name)
-        if obj then
-            pcall(function() obj:Destroy() end)
-        end
+    if settings.removeSkillcheck then
+        local sc1 = char:FindFirstChild("Skillcheck-gen")
+        local sc2 = char:FindFirstChild("Skillcheck-player")
+
+        if sc1 then pcall(function() sc1:Destroy() end) end
+        if sc2 then pcall(function() sc2:Destroy() end) end
     end
 end
 
 --========================================================
--- CHARACTER BIND
+-- APPLY EVERYTHING ON CHARACTER SPAWN
 --========================================================
 local function bindCharacter(character)
     if not character then return end
-
-    currentCharacter = character
-
     task.wait(0.2)
-
     applyAttributes(character)
     removeSkillChecks()
     enforceAll(character)
 end
 
-local function safeBindCurrentCharacter()
-    local char = LocalPlayer.Character
-    if char then
-        bindCharacter(char)
-    end
-end
+-- Character respawn listener
+LocalPlayer.CharacterAdded:Connect(bindCharacter)
 
--- CharacterAdded
-if not charAddedConn then
-    charAddedConn = LocalPlayer.CharacterAdded:Connect(bindCharacter)
-end
-
+-- Apply immediately if character already exists
 if LocalPlayer.Character then
     bindCharacter(LocalPlayer.Character)
 end
 
 --========================================================
--- PUBLIC API
+-- PUBLIC API (CALLED FROM main.lua)
 --========================================================
-function VD.SetKillerBreakSpeed(v)
-    settings.killer.breakspeed = tonumber(v)
-    safeBindCurrentCharacter()
+function VD.SetKillerBreakSpeed(val)
+    settings.killer.breakspeed = tonumber(val)
+    -- apply immediately to current character (if exists)
+    local char = LocalPlayer.Character
+    if char then
+        setAttribute(char, "breakspeed", settings.killer.breakspeed)
+    end
 end
 
-function VD.SetKillerSpeed(v)
-    settings.killer.speed = tonumber(v)
-    safeBindCurrentCharacter()
+function VD.SetKillerSpeed(val)
+    settings.killer.speed = tonumber(val)
+    local char = LocalPlayer.Character
+    if char then
+        setAttribute(char, "speed", settings.killer.speed)
+    end
 end
 
-function VD.SetKillerSpeedBoost(v)
-    settings.killer.speedboost = tonumber(v)
-    safeBindCurrentCharacter()
+function VD.SetKillerSpeedBoost(val)
+    settings.killer.speedboost = tonumber(val)
+    local char = LocalPlayer.Character
+    if char then
+        setAttribute(char, "speedboost", settings.killer.speedboost)
+    end
 end
 
 function VD.SetKillerMask(maskName)
     settings.killer.mask = maskName
-    safeBindCurrentCharacter()
+    local char = LocalPlayer.Character
+    if char then
+        setAttribute(char, "Mask", settings.killer.mask)
+    end
 end
 
-function VD.SetSurvivorSpeedBoost(v)
-    settings.survivor.speedboost = tonumber(v)
-    safeBindCurrentCharacter()
+function VD.SetSurvivorSpeedBoost(val)
+    settings.survivor.speedboost = tonumber(val)
+    local char = LocalPlayer.Character
+    if char then
+        setAttribute(char, "speedboost", settings.survivor.speedboost)
+    end
 end
 
 function VD.ToggleRemoveSkillCheck(state)
     settings.removeSkillcheck = state
-    safeBindCurrentCharacter()
+    local char = LocalPlayer.Character
+    if char then
+        removeSkillChecks()
+    end
 end
 
 function VD.GetMaskList()
     return masks
-end
-
---========================================================
--- CLEANUP
---========================================================
-function VD.Destroy()
-    if charAddedConn and charAddedConn.Connected then
-        pcall(function() charAddedConn:Disconnect() end)
-    end
-    charAddedConn = nil
-
-    clearConnections()
-    currentCharacter = nil
 end
 
 return VD
