@@ -76,6 +76,22 @@ local function applyAttributes(character)
     setAttribute(character, "speedboost", settings.survivor.speedboost)
 end
 
+--========================================================
+-- REMOVE OLD CONNECTIONS TO PREVENT MEMORY LEAK
+--========================================================
+local function clearConnections()
+    for _, conn in pairs(attributeConnections) do
+        if conn and conn.Connected then
+            -- protect calls
+            pcall(function() conn:Disconnect() end)
+        end
+    end
+    attributeConnections = {}
+end
+
+--========================================================
+-- ENFORCE ATTRIBUTE VALUES (ANTI-SERVER OVERRIDE)
+--========================================================
 local function enforceAttribute(character, attrName, getScriptValue)
     if not character then return end
 
@@ -110,43 +126,6 @@ local function enforceAttribute(character, attrName, getScriptValue)
     table.insert(attributeConnections, connection)
 end
 
-
-
---========================================================
--- REMOVE OLD CONNECTIONS TO PREVENT MEMORY LEAK
---========================================================
-local function clearConnections()
-    for _, conn in pairs(attributeConnections) do
-        if conn and conn.Connected then
-            -- protect calls
-            pcall(function() conn:Disconnect() end)
-        end
-    end
-    attributeConnections = {}
-end
-
-
-    -- Roblox internal attribute
-    local okAttr, exists = pcall(function() return character:GetAttribute(attrName) ~= nil end)
-    if okAttr and exists then
-        local ok2, conn2 = pcall(function()
-            return character:GetAttributeChangedSignal(attrName):Connect(function()
-                if not character or not character.Parent then
-                    pcall(function() conn2:Disconnect() end)
-                    return
-                end
-
-                local target = getValue()
-                if target ~= nil and character:GetAttribute(attrName) ~= target then
-                    character:SetAttribute(attrName, target)
-                end
-            end)
-        end)
-        if ok2 and conn2 then
-            table.insert(attributeConnections, conn2)
-        end
-    end
-end
 
 --========================================================
 -- REMOVE SKILLCHECK
