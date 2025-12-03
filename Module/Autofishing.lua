@@ -74,7 +74,7 @@ function AutoFishing.Start()
                 log("🎯 Tried to equip fishing rod (slot 1)")
             else
                 log("⚠️ EquipToolFromHotbar not found!")
-                task.wait(1)
+                task.wait(0.05)
                 continue
             end
 
