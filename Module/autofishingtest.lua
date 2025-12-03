@@ -1,0 +1,107 @@
+local AutoFishing = {}
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+-- Flag to track status
+AutoFishing.Enabled = false
+
+-- Helper: log messages
+local function log(msg)
+    print(msg)
+end
+
+-- Wait for the equipped fishing tool
+local function waitForEquip(character)
+    -- Check if tool already exists and has 'Main'
+    local equippedTool = character:FindFirstChild("!!!EQUIPPED_TOOL!!!")
+    if equippedTool and equippedTool:FindFirstChild("Main") then
+        log("✅ Equipped tool with 'Main' already present.")
+        return
+    end
+
+    log("⏳ Waiting for equipped tool with 'Main'...")
+
+    while AutoFishing.Enabled do
+        local child = character.ChildAdded:Wait()
+        log("Child added to character:", child.Name)
+
+        if child.Name == "!!!EQUIPPED_TOOL!!!" then
+            local mainChild = child:FindFirstChild("Main")
+            if mainChild then
+                log("✅ Equipped tool with 'Main' detected immediately.")
+                break
+            else
+                log("Waiting for 'Main' inside equipped tool...")
+                mainChild = child.ChildAdded:Wait()
+                while mainChild.Name ~= "Main" do
+                    mainChild = child.ChildAdded:Wait()
+                end
+                log("✅ 'Main' detected inside equipped tool.")
+                break
+            end
+        end
+    end
+end
+
+-- Start auto fishing
+function AutoFishing.Start()
+    AutoFishing.Enabled = true
+
+    task.spawn(function()
+        while AutoFishing.Enabled do
+            
+            -- tiny delay to prevent self-lag but still very fast
+            task.wait(0.05)
+
+            local netFolder = ReplicatedStorage
+                :FindFirstChild("Packages")
+                and ReplicatedStorage.Packages:FindFirstChild("_Index")
+                and ReplicatedStorage.Packages._Index:FindFirstChild("sleitnick_net@0.2.0")
+                and ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"]:FindFirstChild("net")
+
+            if not netFolder then continue end
+
+            -- EQUIP ROD
+            local equipRE = netFolder:FindFirstChild("RE/EquipToolFromHotbar")
+            if equipRE then
+                task.spawn(function()
+                    equipRE:FireServer(1)
+                end)
+            end
+
+            -- CHARGE ROD (InvokeServer avoided from blocking)
+            local chargeRF = netFolder:FindFirstChild("RF/ChargeFishingRod")
+            if chargeRF then
+                task.spawn(function()
+                    chargeRF:InvokeServer(workspace:GetServerTimeNow())
+                end)
+            end
+
+            -- START MINIGAME
+            local startRF = netFolder:FindFirstChild("RF/RequestFishingMinigameStarted")
+            if startRF then
+                task.spawn(function()
+                    startRF:InvokeServer(1, 1)
+                end)
+            end
+
+            -- COMPLETE MINIGAME
+            local finishedRE = netFolder:FindFirstChild("RE/FishingCompleted")
+            if finishedRE then
+                task.spawn(function()
+                    finishedRE:FireServer()
+                end)
+            end
+
+        end
+    end)
+end
+
+
+-- Stop auto fishing
+function AutoFishing.Stop()
+    AutoFishing.Enabled = false
+end
+
+return AutoFishing
