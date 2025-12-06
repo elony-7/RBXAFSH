@@ -52,7 +52,7 @@ function AutoFishing.Start()
         while AutoFishing.Enabled do
             
             -- tiny delay to prevent self-lag but still very fast
-            task.wait(0.001)
+            task.wait(0.040)
 
             local netFolder = ReplicatedStorage
                 :FindFirstChild("Packages")
