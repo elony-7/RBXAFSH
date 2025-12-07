@@ -2,7 +2,7 @@ local AutoFishing = {}
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
-print("Updated")
+print("Updated 2")
 
 AutoFishing.Enabled = false
 
@@ -60,7 +60,7 @@ function AutoFishing.Start()
         local loopCounter = 0
 
         while AutoFishing.Enabled do
-            task.wait(0.040)
+            task.wait(0.070)
 
             loopCounter += 1
 
