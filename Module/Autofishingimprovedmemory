@@ -41,7 +41,7 @@ local function waitForEquip(character)
 
     -- Yield with safe loop (NO Wait() leaks)
     while AutoFishing.Enabled and conn.Connected do
-        task.wait(0.040)
+        task.wait(0.010)
     end
 end
 
@@ -59,7 +59,7 @@ function AutoFishing.Start()
         local loopCounter = 0
 
         while AutoFishing.Enabled do
-            task.wait(0.085)
+            task.wait(0.040)
 
             loopCounter += 1
 
