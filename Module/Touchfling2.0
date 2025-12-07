@@ -1,0 +1,63 @@
+-- TouchFlingModule
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local module = {}
+local hiddenfling = false
+local flingThread = nil
+
+-- Ensure detection decal exists only once
+if not ReplicatedStorage:FindFirstChild("juisdfj0i32i0eidsuf0iok") then
+    local detection = Instance.new("Decal")
+    detection.Name = "juisdfj0i32i0eidsuf0iok"
+    detection.Parent = ReplicatedStorage
+end
+
+-- Main fling loop
+local function fling()
+    local lp = Players.LocalPlayer
+    local movel = 0.1
+
+    while hiddenfling do
+        RunService.Heartbeat:Wait()
+
+        local char = lp.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+        if hrp then
+            local vel = hrp.Velocity
+
+            -- Burst fling
+            hrp.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+            RunService.RenderStepped:Wait()
+
+            -- Reset velocity
+            hrp.Velocity = vel
+            RunService.Stepped:Wait()
+
+            -- Minor oscillation to break inertia
+            hrp.Velocity = vel + Vector3.new(0, movel, 0)
+            movel = -movel
+        end
+    end
+end
+
+function module.Toggle(state)
+    hiddenfling = state
+
+    -- If enabling fling
+    if state then
+        -- Don't create multiple threads
+        if not flingThread or coroutine.status(flingThread) == "dead" then
+            flingThread = coroutine.create(fling)
+            coroutine.resume(flingThread)
+        end
+        return
+    end
+
+    -- If disabling: stop loop
+    hiddenfling = false
+end
+
+return module
