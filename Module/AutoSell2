@@ -1,0 +1,101 @@
+local autosellmodule = {
+    autoSellEnabled = false,
+    sellDelayMinutes = 1,
+    _loopRunning = false,
+}
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Cached references
+local sellAllRF = nil
+
+-- Internal loop thread handle
+local sellLoopThread = nil
+
+-------------------------------------
+-- Cache the remote ONCE
+-------------------------------------
+task.spawn(function()
+    local packages = ReplicatedStorage:WaitForChild("Packages")
+    local index = packages:WaitForChild("_Index")
+    local sleit = index:WaitForChild("sleitnick_net@0.2.0")
+    local net = sleit:WaitForChild("net")
+
+    sellAllRF = net:FindFirstChild("RF/SellAllItems")
+
+    if not sellAllRF then
+        warn("❌ SellAllItems RF not found!")
+    end
+end)
+
+-------------------------------------
+-- Manual Sell (button)
+-------------------------------------
+function autosellmodule.sellAllItems()
+    if not sellAllRF then
+        warn("❌ SellAllItems RF missing!")
+        return
+    end
+
+    -- Non-blocking remote call (prevents yield memory stacking)
+    task.spawn(function()
+        local ok, err = pcall(function()
+            sellAllRF:InvokeServer()
+        end)
+
+        if ok then
+            print("✅ Manual SELL executed")
+        else
+            warn("❌ Manual sell failed:", err)
+        end
+    end)
+end
+
+-------------------------------------
+-- Auto Sell Loop
+-------------------------------------
+local function autoSellLoop()
+    while autosellmodule.autoSellEnabled do
+        -- Sell
+        autosellmodule.sellAllItems()
+
+        -- Wait for next cycle
+        local delaySeconds = autosellmodule.sellDelayMinutes * 60
+        for i = 1, delaySeconds do
+            if not autosellmodule.autoSellEnabled then
+                return -- safely exit early
+            end
+            task.wait(1)
+        end
+    end
+end
+
+-------------------------------------
+-- Enable Auto Sell
+-------------------------------------
+function autosellmodule.enableAutoSell()
+    if autosellmodule.autoSellEnabled then return end -- Prevent duplicate loops
+
+    autosellmodule.autoSellEnabled = true
+
+    -- Start loop thread
+    sellLoopThread = task.spawn(autoSellLoop)
+    print("🔁 Auto-sell ENABLED")
+end
+
+-------------------------------------
+-- Disable Auto Sell
+-------------------------------------
+function autosellmodule.disableAutoSell()
+    autosellmodule.autoSellEnabled = false
+
+    -- Stop loop immediately
+    if sellLoopThread then
+        task.cancel(sellLoopThread)
+        sellLoopThread = nil
+    end
+
+    print("⏹️ Auto-sell DISABLED")
+end
+
+return autosellmodule
