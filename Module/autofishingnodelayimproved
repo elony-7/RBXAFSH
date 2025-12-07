@@ -1,0 +1,116 @@
+local AutoFishing = {}
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+AutoFishing.Enabled = false
+
+local function log(msg)
+	print(msg)
+end
+
+
+-- SAFE waitForEquip (NO Wait() threads)
+local function waitForEquip(character)
+	local equippedTool = character:FindFirstChild("!!!EQUIPPED_TOOL!!!")
+	if equippedTool and equippedTool:FindFirstChild("Main") then
+		log("✅ Equipped tool with 'Main' already present.")
+		return
+	end
+
+	log("⏳ Waiting for equipped tool with 'Main'...")
+
+	local mainFound = false
+	local equipConn, mainConn
+
+	equipConn = character.ChildAdded:Connect(function(child)
+		if child.Name == "!!!EQUIPPED_TOOL!!!" then
+			
+			local main = child:FindFirstChild("Main")
+			if main then
+				mainFound = true
+				equipConn:Disconnect()
+				if mainConn then mainConn:Disconnect() end
+			else
+				mainConn = child.ChildAdded:Connect(function(sub)
+					if sub.Name == "Main" then
+						mainFound = true
+						equipConn:Disconnect()
+						mainConn:Disconnect()
+					end
+				end)
+			end
+		end
+	end)
+
+	-- Safe polling (no hanging threads)
+	while AutoFishing.Enabled and not mainFound do
+		task.wait(0.05)
+	end
+end
+
+
+--=============================
+--     MAIN AUTO LOOP
+--=============================
+function AutoFishing.Start()
+	AutoFishing.Enabled = true
+
+	task.spawn(function()
+
+		local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+		waitForEquip(character)
+
+		while AutoFishing.Enabled do
+
+			-- preserve original burst speed
+			task.wait(0.001)
+
+			local packages = ReplicatedStorage:FindFirstChild("Packages")
+			if not packages then continue end
+
+			local index = packages:FindFirstChild("_Index")
+			if not index then continue end
+
+			local sleitnick = index:FindFirstChild("sleitnick_net@0.2.0")
+			if not sleitnick then continue end
+
+			local netFolder = sleitnick:FindFirstChild("net")
+			if not netFolder then continue end
+
+			--------------------------------------------------
+			-- SAFE BURST CALLS (no thread spam)
+			-- task.defer runs instantly but doesn't spawn new threads
+			--------------------------------------------------
+
+			local equipRE = netFolder:FindFirstChild("RE/EquipToolFromHotbar")
+			if equipRE then
+				task.defer(equipRE.FireServer, equipRE, 1)
+			end
+
+			local chargeRF = netFolder:FindFirstChild("RF/ChargeFishingRod")
+			if chargeRF then
+				task.defer(chargeRF.InvokeServer, chargeRF, workspace:GetServerTimeNow())
+			end
+
+			local startRF = netFolder:FindFirstChild("RF/RequestFishingMinigameStarted")
+			if startRF then
+				task.defer(startRF.InvokeServer, startRF, 1, 1)
+			end
+
+			local finishedRE = netFolder:FindFirstChild("RE/FishingCompleted")
+			if finishedRE then
+				task.defer(finishedRE.FireServer, finishedRE)
+			end
+
+		end
+
+	end)
+end
+
+
+function AutoFishing.Stop()
+	AutoFishing.Enabled = false
+end
+
+return AutoFishing
