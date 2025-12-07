@@ -1,0 +1,84 @@
+local autosellmodule = {
+    autoSellEnabled = false,
+    sellDelayMinutes = 1,
+    _loopRunning = false,
+}
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Cached references
+local sellAllRF = nil
+local autoLoopThread = nil
+
+-- Setup cache once
+task.spawn(function()
+    local packages = ReplicatedStorage:WaitForChild("Packages")
+    local index = packages:WaitForChild("_Index")
+    local sleit = index:WaitForChild("sleitnick_net@0.2.0")
+    local netModule = sleit:WaitForChild("net")
+
+    sellAllRF = netModule:FindFirstChild("RF/SellAllItems")
+
+    if not sellAllRF then
+        warn("❌ RF/SellAllItems not found!")
+    end
+end)
+
+-- Manual sell function (safe + non-blocking)
+function autosellmodule.sellAllItems()
+    if not sellAllRF then
+        warn("❌ SellAllItems RF missing!")
+        return
+    end
+
+    task.spawn(function()
+        local success, err = pcall(function()
+            sellAllRF:InvokeServer()
+        end)
+
+        if success then
+            print("✅ Items sold!")
+        else
+            warn("❌ Sell error:", err)
+        end
+    end)
+end
+
+-- Start automatic selling loop
+function autosellmodule.startAutoSell()
+    if autosellmodule._loopRunning then return end  -- prevent duplicates
+
+    autosellmodule.autoSellEnabled = true
+    autosellmodule._loopRunning = true
+
+    autoLoopThread = task.spawn(function()
+        while autosellmodule.autoSellEnabled do
+            autosellmodule.sellAllItems()
+
+            -- convert minutes to seconds
+            local delay = autosellmodule.sellDelayMinutes * 60
+
+            -- safe wait (breaks early when disabled)
+            for i = 1, delay do
+                if not autosellmodule.autoSellEnabled then break end
+                task.wait(1)
+            end
+        end
+
+        autosellmodule._loopRunning = false
+    end)
+end
+
+-- Stop automatic selling loop
+function autosellmodule.stopAutoSell()
+    autosellmodule.autoSellEnabled = false
+
+    if autoLoopThread then
+        task.cancel(autoLoopThread)
+        autoLoopThread = nil
+    end
+
+    autosellmodule._loopRunning = false
+end
+
+return autosellmodule
