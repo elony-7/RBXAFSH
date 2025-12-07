@@ -1,0 +1,125 @@
+local AutoFishing = {}
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+AutoFishing.Enabled = false
+
+local function log(msg)
+    print(msg)
+end
+
+-- Safe wait for tool EQUIP without leaking threads
+local function waitForEquip(character)
+    local equippedTool = character:FindFirstChild("!!!EQUIPPED_TOOL!!!")
+    if equippedTool and equippedTool:FindFirstChild("Main") then
+        log("✅ Tool already equipped with Main.")
+        return
+    end
+    
+    log("⏳ Waiting for equipped tool with 'Main'...")
+
+    -- Single connection, single thread (no leak)
+    local conn
+    conn = character.ChildAdded:Connect(function(child)
+        if child.Name == "!!!EQUIPPED_TOOL!!!" then
+            if child:FindFirstChild("Main") then
+                log("✅ Equipped tool detected immediately.")
+                conn:Disconnect()
+            else
+                local conn2
+                conn2 = child.ChildAdded:Connect(function(sub)
+                    if sub.Name == "Main" then
+                        log("✅ 'Main' detected.")
+                        conn2:Disconnect()
+                        conn:Disconnect()
+                    end
+                end)
+            end
+        end
+    end)
+
+    -- Yield with safe loop (NO Wait() leaks)
+    while AutoFishing.Enabled and conn.Connected do
+        task.wait(0.05)
+    end
+end
+
+--===========================
+-- MAIN AUTO FISHING LOOP
+--===========================
+function AutoFishing.Start()
+    AutoFishing.Enabled = true
+
+    task.spawn(function()
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+        waitForEquip(character)  -- safe, no leak
+
+        local loopCounter = 0
+
+        while AutoFishing.Enabled do
+            task.wait(0.085)
+
+            loopCounter += 1
+
+            -------------------------------------------
+            -- Fetch netFolder one time per loop only
+            -------------------------------------------
+            local packages = ReplicatedStorage:FindFirstChild("Packages")
+            if not packages then continue end
+
+            local index = packages:FindFirstChild("_Index")
+            if not index then continue end
+
+            local sleitnick = index:FindFirstChild("sleitnick_net@0.2.0")
+            if not sleitnick then continue end
+
+            local netFolder = sleitnick:FindFirstChild("net")
+            if not netFolder then continue end
+
+            -----------------------------------------------------
+            -- Run all server calls WITHOUT thread spam
+            -- (Direct FireServer is safe and lightweight)
+            -----------------------------------------------------
+
+            local equipRE = netFolder:FindFirstChild("RE/EquipToolFromHotbar")
+            if equipRE then
+                equipRE:FireServer(1)
+            end
+
+            local chargeRF = netFolder:FindFirstChild("RF/ChargeFishingRod")
+            if chargeRF then
+                task.defer(function()
+                    chargeRF:InvokeServer(workspace:GetServerTimeNow())
+                end)
+            end
+
+            local startRF = netFolder:FindFirstChild("RF/RequestFishingMinigameStarted")
+            if startRF then
+                task.defer(function()
+                    startRF:InvokeServer(1, 1)
+                end)
+            end
+
+            local finishedRE = netFolder:FindFirstChild("RE/FishingCompleted")
+            if finishedRE then
+                finishedRE:FireServer()
+            end
+
+            --------------------------------------------------
+            -- OPTIONAL: anti-lag pause every 1000 loops
+            --------------------------------------------------
+            if loopCounter >= 1000 then
+                task.wait(15)
+                loopCounter = 0
+            end
+        end
+    end)
+end
+
+function AutoFishing.Stop()
+    AutoFishing.Enabled = false
+end
+
+return AutoFishing
