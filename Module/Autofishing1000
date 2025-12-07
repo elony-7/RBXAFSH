@@ -57,7 +57,7 @@ function AutoFishing.Start()
             counter += 1
             if counter >= 1000 then
                 counter = 0
-                task.wait(15)  -- ⏳ PAUSE 15 SECONDS
+                task.wait(8)  -- ⏳ PAUSE 8 SECONDS
             end
 
             -- tiny delay
