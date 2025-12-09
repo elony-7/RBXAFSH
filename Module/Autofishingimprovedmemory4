@@ -12,31 +12,6 @@ end
 
 -- SAFE waitForEquip (NO Wait() threads)
 
-	log("⏳ Waiting for equipped tool with 'Main'...")
-
-	local mainFound = false
-	local equipConn, mainConn
-
-	equipConn = character.ChildAdded:Connect(function(child)
-		if child.Name == "!!!EQUIPPED_TOOL!!!" then
-			
-			local main = child:FindFirstChild("Main")
-			if main then
-				mainFound = true
-				equipConn:Disconnect()
-				if mainConn then mainConn:Disconnect() end
-			else
-				mainConn = child.ChildAdded:Connect(function(sub)
-					if sub.Name == "Main" then
-						mainFound = true
-						equipConn:Disconnect()
-						mainConn:Disconnect()
-					end
-				end)
-			end
-		end
-	end)
-
 	-- Safe polling (no hanging threads)
 	while AutoFishing.Enabled and not mainFound do
 		task.wait(0.05)
