@@ -112,7 +112,7 @@ function AutoFishing.Start()
             -- OPTIONAL: anti-lag pause every 1000 loops
             --------------------------------------------------
             if loopCounter >= 50 then
-                task.wait(3.2)
+                task.wait(4.5)
                 loopCounter = 0
             end
         end
