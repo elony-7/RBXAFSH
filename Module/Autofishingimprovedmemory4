@@ -9,16 +9,6 @@ local function log(msg)
 	print(msg)
 end
 
-
--- SAFE waitForEquip (NO Wait() threads)
-
-	-- Safe polling (no hanging threads)
-	while AutoFishing.Enabled and not mainFound do
-		task.wait(0.05)
-	end
-end
-
-
 --=============================
 --     MAIN AUTO LOOP
 --=============================
@@ -28,11 +18,9 @@ function AutoFishing.Start()
 	task.spawn(function()
 
 		local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-		waitForEquip(character)
 
 		while AutoFishing.Enabled do
 
-			-- preserve original burst speed
 			task.wait(0.001)
 
 			local packages = ReplicatedStorage:FindFirstChild("Packages")
@@ -47,10 +35,7 @@ function AutoFishing.Start()
 			local netFolder = sleitnick:FindFirstChild("net")
 			if not netFolder then continue end
 
-			--------------------------------------------------
-			-- SAFE BURST CALLS (no thread spam)
-			-- task.defer runs instantly but doesn't spawn new threads
-			--------------------------------------------------
+			-- Removed equip remote!
 
 			local chargeRF = netFolder:FindFirstChild("RF/ChargeFishingRod")
 			if chargeRF then
@@ -71,7 +56,6 @@ function AutoFishing.Start()
 
 	end)
 end
-
 
 function AutoFishing.Stop()
 	AutoFishing.Enabled = false
