@@ -60,7 +60,7 @@ function AutoFishing.Start()
         local loopCounter = 0
 
         while AutoFishing.Enabled do
-            task.wait(0.090)
+            task.wait(0.10)
 
             loopCounter += 1
 
@@ -111,8 +111,8 @@ function AutoFishing.Start()
             --------------------------------------------------
             -- OPTIONAL: anti-lag pause every 1000 loops
             --------------------------------------------------
-            if loopCounter >= 200 then
-                task.wait(3)
+            if loopCounter >= 50 then
+                task.wait(4)
                 loopCounter = 0
             end
         end
