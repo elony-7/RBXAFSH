@@ -21,7 +21,7 @@ function AutoFishing.Start()
 
 		while AutoFishing.Enabled do
 
-			task.wait(0.004)
+			task.wait(0.001)
 
 			local packages = ReplicatedStorage:FindFirstChild("Packages")
 			if not packages then continue end
